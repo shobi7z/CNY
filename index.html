@@ -1,578 +1,170 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>الرئيسية | VNDR.KR</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- خط عربي -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap">
-  <style>
-    body {
-      font-family: 'Tajawal', Arial, sans-serif;
-      background: #f6f6f6;
-      margin: 0;
-      padding: 0;
-      color: #222;
-    }
-    header {
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 22px 0 12px 0;
-      box-shadow: 0 2px 16px #e7eaf5a9;
-      font-size: 2em;
-      font-weight: 900;
-      font-family: 'Tajawal',Arial,sans-serif;
-      letter-spacing: 2px;
-      border-bottom: 1px solid #eee;
-      color: #1a1a1a;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-    .kr-flag {
-      width: 36px;
-      height: 26px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px #cdcdcd44;
-      border: 1px solid #eee;
-      margin-left: 10px;
-      margin-right: 7px;
-      background: #fff;
-      object-fit: cover;
-      display: inline-block;
-    }
-    .hero-image {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: none;
-      margin: 0;
-      padding: 0;
-    }
-    .hero-image img {
-      max-width: 98vw;
-      height: auto;
-      display: block;
-      margin: 16px auto 0 auto;
-      border-radius: 32px;
-      box-shadow: 0 4px 32px #e7eaf511;
-      border: 1.5px solid #e7eaf5;
-      transition: box-shadow 0.18s, border-radius 0.23s;
-    }
-    .brands-section {
-      background: #fff;
-      box-shadow: 0 1px 8px #e7eaf511;
-      margin-bottom: 0;
-      padding: 24px 0 0 0;
-      border-bottom: 1px solid #eee;
-    }
-    .brand-block {
-      margin-bottom: 44px;
-      padding-bottom: 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .brand-btn-title {
-      width: 94vw;
-      max-width: 1200px;
-      margin: 0 auto 25px auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 54px;
-      background: #222;
-      color: #fff;
-      font-size: 1.2em;
-      font-family: 'Tajawal',Arial,sans-serif;
-      font-weight: 700;
-      border-radius: 16px;
-      box-shadow: 0 2px 24px #22222215;
-      border: none;
-      letter-spacing: 1.6px;
-      outline: none;
-      text-align: center;
-      transition: box-shadow 0.18s, background 0.22s;
-      margin-top: 0;
-      margin-bottom: 25px;
-      cursor: default;
-    }
-    .brand-btn-title span {
-      flex: 1;
-      text-align: center;
-      display: block;
-    }
-    .products-carousel {
-      overflow-x: auto;
-      display: flex;
-      flex-direction: row;
-      gap: 30px;
-      padding: 0 14px 0 14px;
-      scroll-behavior: smooth;
-      margin-bottom: 12px;
-    }
-    .products-carousel::-webkit-scrollbar {
-      height: 7px;
-    }
-    .products-carousel::-webkit-scrollbar-thumb {
-      background: #222;
-      border-radius: 5px;
-    }
-    .products-carousel::-webkit-scrollbar-track {
-      background: #eee;
-      border-radius: 5px;
-    }
-    /* زيادة حجم إطار وصورة المنتج */
-    .product-card {
-      flex: 0 0 370px;
-      background: #fff;
-      border-radius: 34px;
-      box-shadow: 0 4px 48px #e7eaf5a8;
-      padding: 40px 24px 32px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      cursor: pointer;
-      border: 3px solid #377dcb;
-      transition: box-shadow 0.14s, border 0.13s, transform 0.13s;
-      min-width: 370px;
-      max-width: 400px;
-      min-height: 420px;
-      text-align: center;
-    }
-    .product-card:hover {
-      box-shadow: 0 12px 54px #22222255;
-      border: 3px solid #e74c3c;
-      transform: translateY(-8px) scale(1.06);
-    }
-    .product-card img {
-      width: 230px;
-      height: 230px;
-      object-fit: contain;
-      border-radius: 28px;
-      background: #f8f8f8;
-      border: 3px solid #e7eaf5;
-      box-shadow: 0 2px 22px #eee5ee33;
-      margin-bottom: 28px;
-      margin-top: 6px;
-      transition: transform 0.14s, box-shadow 0.14s;
-      cursor: pointer;
-    }
-    .product-card:hover img {
-      transform: scale(1.07);
-      box-shadow: 0 8px 32px #377dcb55;
-      border: 3px solid #e74c3c;
-    }
-    .product-info h3 {
-      font-size: 1.25em;
-      margin: 0 0 12px 0;
-      color: #222;
-      font-family: 'Tajawal',Arial,sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .prices {
-      margin-bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-    }
-    .old-price {
-      text-decoration: line-through;
-      color: #bbb;
-      font-size: 1.12em;
-      font-weight: 400;
-      margin-bottom: 0;
-    }
-    .new-price {
-      font-size: 1.33em;
-      font-weight: bold;
-      color: #222;
-      background: none;
-      margin-bottom: 0;
-      letter-spacing: .2px;
-    }
-    .discount {
-      display: inline-block;
-      color: #fff;
-      background: #e74c3c;
-      font-weight: bold;
-      font-size: 1.05em;
-      padding: 5px 19px;
-      border-radius: 13px;
-      margin-bottom: 0;
-      letter-spacing: 1px;
-      margin-top: 5px;
-    }
-    .brand-label {
-      font-size: 1.07em;
-      color: #666;
-      font-weight: bold;
-      margin-top: 10px;
-      letter-spacing: .7px;
-      background: #f6f6f6;
-      border-radius: 10px;
-      padding: 4px 14px;
-      display: inline-block;
-    }
-    .no-products {
-      padding: 28px 0 0 0;
-      text-align: center;
-      color: #e74c3c;
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-    /* نافذة الصورة المنبثقة */
-    .img-modal-bg {
-      position: fixed;
-      top:0; left:0; width:100vw; height:100vh;
-      background: rgba(40,25,56,0.16);
-      display: none;
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(3px);
-      transition: opacity 0.18s;
-    }
-    .img-modal {
-      background: rgba(255,255,255,0.96);
-      border-radius: 38px;
-      box-shadow: 0 10px 88px #22222233;
-      padding: 30px 18px;
-      max-width: 90vw;
-      max-height: 95vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      animation: showModal 0.33s cubic-bezier(.29,.9,.53,1.12);
-      border: 2px solid #377dcb;
-    }
-    .img-modal img {
-      max-width: 80vw;
-      max-height: 70vh;
-      border-radius: 36px;
-      box-shadow: 0 4px 32px #377dcb44;
-      border: 2.5px solid #e7eaf5;
-      background: #f8f8f8;
-      display: block;
-    }
-    .img-modal .close-btn {
-      position: absolute;
-      top: 13px; left: 17px;
-      background: #eee;
-      color: #222;
-      font-size: 2em;
-      border: none;
-      border-radius: 50%;
-      width: 44px; height: 44px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px #ccc;
-      transition: background 0.2s;
-      font-family: 'Tajawal',Arial,sans-serif;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .img-modal .close-btn:hover {
-      background: #e74c3c;
-      color: #fff;
-    }
-    .modal-bg {
-      position: fixed;
-      top:0; left:0;
-      width:100vw; height:100vh;
-      background: rgba(40,25,56,0.09);
-      display: none;
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(1.5px);
-    }
-    .modal {
-      background: #fff;
-      border-radius: 32px;
-      max-width: 500px;
-      width: 95vw;
-      padding: 40px 22px 34px 22px;
-      box-shadow: 0 12px 70px #22222229;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      animation: showModal 0.35s cubic-bezier(.29,.9,.53,1.12);
-      border: 2px solid #377dcb;
-      text-align: center;
-    }
-    @keyframes showModal {
-      0%{ opacity:0; transform:scale(.6);}
-      100%{ opacity:1; transform:scale(1);}
-    }
-    .modal img {
-      width: 240px;
-      height: 240px;
-      object-fit: cover;
-      border-radius: 28px;
-      border: 2.5px solid #e7eaf5;
-      background: #f8f8f8;
-      margin-bottom: 29px;
-      box-shadow: 0 8px 32px #377dcb44;
-    }
-    .modal h2 {
-      margin: 0 0 18px 0;
-      font-size: 1.35em;
-      color: #222;
-      font-family: 'Tajawal',Arial,sans-serif;
-      font-weight: 900;
-      text-align: center;
-      letter-spacing: 1px;
-    }
-    .modal .modal-prices {
-      text-align: center;
-      margin-bottom: 18px;
-      font-size: 1.10em;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-    }
-    .modal .old-price {color: #bbb;}
-    .modal .new-price {color: #377dcb;}
-    .modal .discount {
-      display: inline-block;
-      color: #fff;
-      background: #e74c3c;
-      font-weight: bold;
-      font-size: 1.08em;
-      padding: 7px 20px;
-      border-radius: 11px;
-      margin-bottom: 0;
-      letter-spacing: 1px;
-      margin-top: 5px;
-      box-shadow: 0 2px 12px #e74c3c44;
-    }
-    .modal .brand-label {
-      margin-bottom: 13px;
-      font-size: 1.12em;
-      color: #666;
-      font-weight: bold;
-      letter-spacing: .7px;
-      background: #f6f6f6;
-      border-radius: 13px;
-      padding: 6px 16px;
-      display: inline-block;
-      box-shadow: 0 1px 6px #e7eaf511;
-    }
-    .modal .close-btn {
-      position: absolute;
-      top: 13px; right: 17px;
-      background: #eee;
-      color: #222;
-      font-size: 1.7em;
-      border: none;
-      border-radius: 50%;
-      width: 42px; height: 42px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px #ccc;
-      transition: background 0.2s;
-      font-family: 'Tajawal',Arial,sans-serif;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .modal .close-btn:hover {
-      background: #e74c3c;
-      color: #fff;
-    }
-    .modal .modal-details {
-      text-align: center;
-      font-size: 1.09em;
-      margin-top: 13px;
-      color: #444;
-      line-height: 1.7;
-      font-family: 'Tajawal',Arial,sans-serif;
-      background: #f6f6f6;
-      border-radius: 16px;
-      padding: 12px 14px;
-      margin-bottom: 6px;
-    }
-    @media (max-width:1000px) {
-      .products-carousel {gap:18px;}
-      .product-card {min-width:240px;max-width:99vw;}
-      .brand-btn-title {font-size:1em; height:44px;}
-      .product-card img {width:150px;height:150px;}
-    }
-    @media (max-width:800px) {
-      .brand-btn-title {height:36px; font-size:0.95em;}
-      .products-carousel {gap:11px;}
-      .product-card {min-width:120px;max-width:93vw;}
-      .product-card img, .modal img {width:90px;height:90px;}
-      .modal {padding: 10px 5px 10px 5px; max-width: 98vw;}
-      .modal .close-btn, .img-modal .close-btn {width:28px;height:28px;font-size:1em;}
-    }
-    @media (max-width:600px) {
-      header { font-size: 1em; padding: 11px 0 6px 0; }
-      .kr-flag {width:22px;height:14px;}
-      .hero-image img {max-width:99vw; border-radius:14px;}
-      .brands-section {padding:12px 0 0 0;}
-      .brand-btn-title {padding:7px 2vw;height:30px;font-size:0.93em;}
-      .brand-btn-title span {font-size:0.98em;}
-      .products-carousel {gap:7px;}
-      .product-card {min-width:90vw;max-width:99vw;padding:18px 5px 18px 5px;}
-      .product-card img {width:70vw;height:70vw;}
-    }
-  </style>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDDg8cfAhHERZ1vigJo85xrozYDx5MrGpI",
-      authDomain: "vndrexpress.firebaseapp.com",
-      projectId: "vndrexpress",
-      storageBucket: "vndrexpress.firebasestorage.app",
-      messagingSenderId: "1023632565902",
-      appId: "1:1023632565902:web:a13e07dd66f563ce77cbdf",
-      measurementId: "G-CQCRZZBJHK"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // جلب كل الماركات (الأزرار)
-    async function getBrands() {
-      const q = query(collection(db, "brands"));
-      const querySnapshot = await getDocs(q);
-      const brands = [];
-      querySnapshot.forEach(docSnap => {
-        brands.push(docSnap.data().name);
-      });
-      return brands;
-    }
-
-    // جلب المنتجات حسب الماركة
-    async function getProductsByBrand(brand) {
-      const q = query(collection(db, "products"), where("brand", "==", brand));
-      const querySnapshot = await getDocs(q);
-      const products = [];
-      querySnapshot.forEach(doc => {
-        products.push(doc.data());
-      });
-      return products;
-    }
-
-    // بناء واجهة جميع الماركات مع المنتجات بشكل أفقي (سلايدر يمين ويسار)
-    async function renderBrandsWithProducts() {
-      const brands = await getBrands();
-      const brandsSection = document.getElementById('brands-section');
-      brandsSection.innerHTML = '';
-      for (let i = 0; i < brands.length; i++) {
-        const brand = brands[i];
-        // عنصر ماركة وزرها المستطيل الطويل
-        const brandBlock = document.createElement('div');
-        brandBlock.className = 'brand-block';
-        brandBlock.innerHTML = `<div class="brand-btn-title"><span>${brand}</span></div><div class="products-carousel" id="products-${brand.replace(/\s+/g,'_')}"></div>`;
-        brandsSection.appendChild(brandBlock);
-
-        // جلب منتجات هذه الماركة
-        const products = await getProductsByBrand(brand);
-        const productsDiv = brandBlock.querySelector('.products-carousel');
-        if (products.length === 0) {
-          productsDiv.innerHTML = '<div class="no-products">لا يوجد منتجات حالياً لهذه الماركة.</div>';
-        } else {
-          products.forEach((prod,i) => {
-            const discount = prod.oldPrice && prod.price
-              ? ((prod.oldPrice - prod.price) / prod.oldPrice * 100).toFixed(0)
-              : '';
-            productsDiv.innerHTML += `
-              <div class="product-card" data-idx="${i}">
-                <img src="${prod.image}" alt="${prod.name}" class="product-image">
-                <div class="product-info">
-                  <h3>${prod.name}</h3>
-                  <div class="prices">
-                    ${prod.oldPrice ? `<span class="old-price">${prod.oldPrice} د.ع</span>` : ''}
-                    <span class="new-price">${prod.price} د.ع</span>
-                    ${discount ? `<span class="discount">خصم ${discount}%</span>` : ''}
-                  </div>
-                  <div class="brand-label">${prod.brand}</div>
-                </div>
-              </div>
-            `;
-          });
-          // نافذة المنتج المنبثقة للصورة
-          productsDiv.querySelectorAll('.product-card .product-image').forEach(img => {
-            img.onclick = (e) => {
-              e.stopPropagation();
-              showImageModal(img.src, img.alt);
-            };
-          });
-          // نافذة تفاصيل المنتج
-          productsDiv.querySelectorAll('.product-card').forEach(card => {
-            card.onclick = (e) => {
-              if (e.target.classList.contains('product-image')) return;
-              const idx = card.dataset.idx;
-              showModal(products[idx]);
-            };
-          });
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محول العملات - دولار إلى دينار عراقي</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            color: #333;
         }
-      }
-    }
-
-    // نافذة التفاصيل المنبثقة
-    function showModal(prod) {
-      const discount = prod.oldPrice && prod.price
-        ? ((prod.oldPrice - prod.price) / prod.oldPrice * 100).toFixed(0)
-        : '';
-      const modalBg = document.getElementById('modal-bg');
-      const modal = document.getElementById('modal');
-      modal.innerHTML = `
-        <button class="close-btn" id="close-modal" title="إغلاق">&times;</button>
-        <img src="${prod.image}" alt="${prod.name}">
-        <h2>${prod.name}</h2>
-        <div class="modal-prices">
-          ${prod.oldPrice ? `<span class="old-price">${prod.oldPrice} د.ع</span>` : ''}
-          <span class="new-price">${prod.price} د.ع</span>
-          ${discount ? `<span class="discount">خصم ${discount}%</span>` : ''}
-        </div>
-        <div class="brand-label">${prod.brand}</div>
-        <div class="modal-details">
-          ${prod.details ? prod.details : "منتج أصلي من أفضل الماركات الكورية. آمن للبشرة وفعال."}
-        </div>
-      `;
-      modalBg.style.display = 'flex';
-      document.getElementById('close-modal').onclick = () => { modalBg.style.display='none'; };
-      modalBg.onclick = e => { if(e.target === modalBg) modalBg.style.display='none'; };
-    }
-
-    // نافذة الصورة المنبثقة فقط
-    function showImageModal(src, alt) {
-      const imgModalBg = document.getElementById('img-modal-bg');
-      const imgModal = document.getElementById('img-modal');
-      imgModal.innerHTML = `
-        <button class="close-btn" id="close-img-modal" title="إغلاق">&times;</button>
-        <img src="${src}" alt="${alt}">
-      `;
-      imgModalBg.style.display = 'flex';
-      document.getElementById('close-img-modal').onclick = () => { imgModalBg.style.display='none'; };
-      imgModalBg.onclick = e => { if(e.target === imgModalBg) imgModalBg.style.display='none'; };
-    }
-
-    window.onload = function() {
-      renderBrandsWithProducts();
-    }
-  </script>
+        
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            width: 90%;
+            max-width: 700px;
+            margin: 30px auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 36px;
+        }
+        
+        .input-group {
+            margin-bottom: 35px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 22px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            font-size: 24px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        .result {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            font-size: 24px;
+            min-height: 120px;
+        }
+        
+        .result-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #27ae60;
+            margin: 20px 0;
+            direction: ltr;
+        }
+        
+        .formula {
+            margin-top: 30px;
+            font-size: 20px;
+            color: #7f8c8d;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 8px;
+        }
+        
+        .currency-symbol {
+            font-size: 28px;
+            margin-left: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                width: 95%;
+            }
+            
+            h1 {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+            
+            input {
+                font-size: 20px;
+                padding: 15px;
+            }
+            
+            .result-value {
+                font-size: 28px;
+            }
+            
+            .formula {
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <span style="font-size:1.1em;margin-left:8px;">VNDR.KR</span>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="علم كوريا الجنوبية" class="kr-flag">
-  </header>
-  <div class="hero-image">
-    <img src="https://i.imgur.com/bvRzX3G.png" alt="واجهة كوزمتك كورية">
-  </div>
-  <div class="brands-section" id="brands-section"></div>
-  <div class="img-modal-bg" id="img-modal-bg">
-    <div class="img-modal" id="img-modal"></div>
-  </div>
-  <div class="modal-bg" id="modal-bg">
-    <div class="modal" id="modal"></div>
-  </div>
+    <div class="container">
+        <h1>محول الدولار إلى الدينار العراقي</h1>
+        
+        <div class="input-group">
+            <label for="dollar">المبلغ بالدولار الأمريكي (USD)</label>
+            <input type="number" id="dollar" placeholder="أدخل المبلغ بالدولار" oninput="convert()" autofocus>
+        </div>
+        
+        <div class="result" id="result">
+            <div>المبلغ بالدينار العراقي (IQD)</div>
+            <div class="result-value" id="result-value">0 دينار</div>
+            <div class="formula">
+                الصيغة: (الدولار × 1410) + 2500 = الدينار العراقي
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function convert() {
+            // الحصول على قيمة الدولار المدخلة
+            const dollarInput = document.getElementById('dollar');
+            const dollarAmount = parseFloat(dollarInput.value);
+            
+            // إذا كانت القيمة صفر أو غير مدخلة
+            if (isNaN(dollarAmount) || dollarAmount <= 0) {
+                document.getElementById('result-value').textContent = "0 دينار";
+                return;
+            }
+            
+            // حساب التحويل حسب الصيغة المطلوبة
+            const exchangeRate = 1410;
+            const additionalAmount = 2500;
+            const iqdAmount = (dollarAmount * exchangeRate) + additionalAmount;
+            
+            // تنسيق الرقم مع فواصل الألوف
+            const formattedAmount = new Intl.NumberFormat('ar-IQ').format(iqdAmount);
+            
+            // عرض النتيجة
+            document.getElementById('result-value').textContent = formattedAmount + " دينار عراقي";
+        }
+        
+        // تحويل تلقائي عند تحميل الصفحة إذا كان هناك قيمة مسبقة
+        document.addEventListener('DOMContentLoaded', function() {
+            const dollarInput = document.getElementById('dollar');
+            if (dollarInput.value) {
+                convert();
+            }
+        });
+    </script>
 </body>
 </html>
