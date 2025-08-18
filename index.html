@@ -1,170 +1,174 @@
+اعمل كود html بعطي الناتج بالدينار العراقي بحيث ان كل 1 يوان صيني يساوي 185 دينار راقي
+
+سأقوم بإنشاء محول عملة من اليوان الصيني إلى الدينار العراقي بسعر الصرف الذي حددته!
+
+تم إنشاء محول العملة! يمكنك الآن إدخال أي مبلغ باليوان الصيني وسيتم تحويله تلقائياً إلى الدينار العراقي بسعر 1 يوان = 185 دينار. جرب الأزرار السريعة أو اكتب أي مبلغ تريد تحويله!
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محول العملات - دولار إلى دينار عراقي</title>
+    <title>محول العملة - يوان صيني إلى دينار عراقي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            margin: 0;
-            padding: 20px;
-            color: #333;
+            font-family: 'Cairo', sans-serif;
         }
-        
-        .container {
-            background-color: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-            padding: 40px;
-            width: 90%;
-            max-width: 700px;
-            margin: 30px auto;
-            text-align: center;
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 40px;
-            font-size: 36px;
+        .card-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        
-        .input-group {
-            margin-bottom: 35px;
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-        
-        label {
-            display: block;
-            margin-bottom: 15px;
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 22px;
-        }
-        
-        input {
-            width: 100%;
-            padding: 18px 20px;
-            border: 3px solid #ddd;
-            border-radius: 12px;
-            font-size: 24px;
-            transition: all 0.3s;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        
-        input:focus {
-            border-color: #3498db;
-            outline: none;
-            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
-        }
-        
-        .result {
-            margin-top: 40px;
-            padding: 30px;
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            font-size: 24px;
-            min-height: 120px;
-        }
-        
-        .result-value {
-            font-size: 36px;
-            font-weight: bold;
-            color: #27ae60;
-            margin: 20px 0;
-            direction: ltr;
-        }
-        
-        .formula {
-            margin-top: 30px;
-            font-size: 20px;
-            color: #7f8c8d;
-            padding: 15px;
-            background-color: #e8f4fc;
-            border-radius: 8px;
-        }
-        
-        .currency-symbol {
-            font-size: 28px;
-            margin-left: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 30px 20px;
-                width: 95%;
-            }
-            
-            h1 {
-                font-size: 28px;
-                margin-bottom: 30px;
-            }
-            
-            input {
-                font-size: 20px;
-                padding: 15px;
-            }
-            
-            .result-value {
-                font-size: 28px;
-            }
-            
-            .formula {
-                font-size: 16px;
-            }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>محول الدولار إلى الدينار العراقي</h1>
-        
-        <div class="input-group">
-            <label for="dollar">المبلغ بالدولار الأمريكي (USD)</label>
-            <input type="number" id="dollar" placeholder="أدخل المبلغ بالدولار" oninput="convert()" autofocus>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl card-shadow p-8 w-full max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="text-4xl mb-4">💱</div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">محول العملة</h1>
+            <p class="text-gray-600">يوان صيني ← دينار عراقي</p>
         </div>
-        
-        <div class="result" id="result">
-            <div>المبلغ بالدينار العراقي (IQD)</div>
-            <div class="result-value" id="result-value">0 دينار</div>
-            <div class="formula">
-                الصيغة: (الدولار × 1410) + 2500 = الدينار العراقي
+
+        <!-- Exchange Rate Display -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-6 text-center">
+            <div class="text-sm text-gray-600 mb-1">سعر الصرف الحالي</div>
+            <div class="text-lg font-bold text-blue-600">1 يوان = 185 دينار عراقي</div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="mb-6">
+            <label class="block text-gray-700 font-semibold mb-3">المبلغ باليوان الصيني (¥)</label>
+            <div class="relative">
+                <input 
+                    type="number" 
+                    id="yuanInput" 
+                    placeholder="أدخل المبلغ باليوان"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg text-center transition-all duration-300"
+                    min="0"
+                    step="0.01"
+                >
+                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">¥</div>
             </div>
         </div>
+
+        <!-- Convert Button -->
+        <button 
+            id="convertBtn"
+            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 mb-6"
+        >
+            تحويل العملة 🔄
+        </button>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 text-center hidden">
+            <div class="text-sm text-gray-600 mb-2">النتيجة بالدينار العراقي</div>
+            <div id="result" class="text-3xl font-bold text-green-600 mb-2"></div>
+            <div class="text-sm text-gray-500">دينار عراقي</div>
+        </div>
+
+        <!-- Quick Convert Buttons -->
+        <div class="mt-6">
+            <div class="text-sm text-gray-600 mb-3 text-center">تحويل سريع</div>
+            <div class="grid grid-cols-3 gap-2">
+                <button class="quick-convert bg-gray-100 hover:bg-gray-200 py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200" data-amount="1">1¥</button>
+                <button class="quick-convert bg-gray-100 hover:bg-gray-200 py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200" data-amount="10">10¥</button>
+                <button class="quick-convert bg-gray-100 hover:bg-gray-200 py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200" data-amount="100">100¥</button>
+                <button class="quick-convert bg-gray-100 hover:bg-gray-200 py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200" data-amount="500">500¥</button>
+                <button class="quick-convert bg-gray-100 hover:bg-gray-200 py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200" data-amount="1000">1000¥</button>
+                <button class="quick-convert bg-gray-100 hover:bg-gray-200 py-2 px-3 rounded-lg text-sm font-medium transition-colors duration-200" data-amount="5000">5000¥</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-xs text-gray-500">
+            <p>💡 سعر الصرف ثابت: 1 يوان = 185 دينار عراقي</p>
+        </div>
     </div>
-    
+
     <script>
-        function convert() {
-            // الحصول على قيمة الدولار المدخلة
-            const dollarInput = document.getElementById('dollar');
-            const dollarAmount = parseFloat(dollarInput.value);
+        const yuanInput = document.getElementById('yuanInput');
+        const convertBtn = document.getElementById('convertBtn');
+        const resultSection = document.getElementById('resultSection');
+        const result = document.getElementById('result');
+        const quickConvertBtns = document.querySelectorAll('.quick-convert');
+
+        // Exchange rate: 1 Yuan = 185 Iraqi Dinar
+        const exchangeRate = 185;
+
+        function convertCurrency(yuanAmount) {
+            const dinarAmount = yuanAmount * exchangeRate;
+            return dinarAmount;
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ar-IQ').format(num);
+        }
+
+        function showResult(yuanAmount, dinarAmount) {
+            result.textContent = formatNumber(dinarAmount);
+            resultSection.classList.remove('hidden');
+            resultSection.classList.add('pulse-animation');
             
-            // إذا كانت القيمة صفر أو غير مدخلة
-            if (isNaN(dollarAmount) || dollarAmount <= 0) {
-                document.getElementById('result-value').textContent = "0 دينار";
+            setTimeout(() => {
+                resultSection.classList.remove('pulse-animation');
+            }, 2000);
+        }
+
+        convertBtn.addEventListener('click', () => {
+            const yuanAmount = parseFloat(yuanInput.value);
+            
+            if (isNaN(yuanAmount) || yuanAmount < 0) {
+                alert('يرجى إدخال مبلغ صحيح باليوان الصيني');
                 return;
             }
             
-            // حساب التحويل حسب الصيغة المطلوبة
-            const exchangeRate = 1410;
-            const additionalAmount = 2500;
-            const iqdAmount = (dollarAmount * exchangeRate) + additionalAmount;
+            const dinarAmount = convertCurrency(yuanAmount);
+            showResult(yuanAmount, dinarAmount);
+        });
+
+        // Quick convert buttons
+        quickConvertBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const amount = parseFloat(btn.dataset.amount);
+                yuanInput.value = amount;
+                const dinarAmount = convertCurrency(amount);
+                showResult(amount, dinarAmount);
+            });
+        });
+
+        // Convert on Enter key press
+        yuanInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                convertBtn.click();
+            }
+        });
+
+        // Real-time conversion as user types
+        yuanInput.addEventListener('input', () => {
+            const yuanAmount = parseFloat(yuanInput.value);
             
-            // تنسيق الرقم مع فواصل الألوف
-            const formattedAmount = new Intl.NumberFormat('ar-IQ').format(iqdAmount);
-            
-            // عرض النتيجة
-            document.getElementById('result-value').textContent = formattedAmount + " دينار عراقي";
-        }
-        
-        // تحويل تلقائي عند تحميل الصفحة إذا كان هناك قيمة مسبقة
-        document.addEventListener('DOMContentLoaded', function() {
-            const dollarInput = document.getElementById('dollar');
-            if (dollarInput.value) {
-                convert();
+            if (!isNaN(yuanAmount) && yuanAmount >= 0) {
+                const dinarAmount = convertCurrency(yuanAmount);
+                showResult(yuanAmount, dinarAmount);
+            } else {
+                resultSection.classList.add('hidden');
             }
         });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9714af931214b8c8',t:'MTc1NTU1NDQ0NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
