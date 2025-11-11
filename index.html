@@ -235,7 +235,10 @@
     <p id="instruction-text">انقر على الخريطة لتحديد موقع التسليم</p>
    </div>
    <div class="content">
-    <div style="margin-bottom: 20px; text-align: center;"><button id="locate-btn" class="permission-btn btn-allow" onclick="requestLocation()" style="display: inline-block;">📍 تحديد موقعي الحالي</button>
+    <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"><button id="locate-btn" class="permission-btn btn-allow" onclick="requestLocation()" style="flex: 0 0 auto;">📍 تحديد موقعي الحالي</button>
+     <div style="flex: 1; min-width: 250px; position: relative;"><input type="text" id="search-input" placeholder="🔍 ابحث عن منطقة في الناصرية..." style="width: 100%; padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: all 0.3s ease;">
+      <div id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 300px; overflow-y: auto; z-index: 1000; display: none; margin-top: 5px;"></div>
+     </div>
     </div>
     <div id="map"></div>
     <div class="info-card">
@@ -274,6 +277,7 @@
         let routeLine;
         let startLocation = [31.0439, 46.2572]; // Nasiriyah coordinates
         let locationRequested = false;
+        let searchMarker;
         
         // حدود مدينة الناصرية
         const nasiriyahBounds = {
@@ -282,6 +286,206 @@
             east: 46.3100,
             west: 46.2000
         };
+
+        // جميع أحياء مدينة الناصرية
+        const nasiriyahAreas = [
+            // الأحياء المركزية
+            { name: "حي الحبوبي", lat: 31.0439, lng: 46.2572 },
+            { name: "حي الشهداء", lat: 31.0520, lng: 46.2650 },
+            { name: "حي السراي", lat: 31.0445, lng: 46.2585 },
+            { name: "حي الجمهورية", lat: 31.0470, lng: 46.2610 },
+            { name: "حي الثورة", lat: 31.0490, lng: 46.2530 },
+            { name: "حي النصر", lat: 31.0410, lng: 46.2680 },
+            { name: "حي الإسكان", lat: 31.0380, lng: 46.2480 },
+            { name: "حي الجمعية", lat: 31.0460, lng: 46.2590 },
+            
+            // الأحياء السكنية
+            { name: "حي الزهراء", lat: 31.0500, lng: 46.2700 },
+            { name: "حي العسكري", lat: 31.0350, lng: 46.2550 },
+            { name: "حي الكرامة", lat: 31.0320, lng: 46.2590 },
+            { name: "حي الحسين", lat: 31.0550, lng: 46.2720 },
+            { name: "حي الفداء", lat: 31.0390, lng: 46.2510 },
+            { name: "حي البساتين", lat: 31.0600, lng: 46.2800 },
+            { name: "حي الأمير", lat: 31.0365, lng: 46.2615 },
+            { name: "حي الضباط", lat: 31.0425, lng: 46.2505 },
+            { name: "حي المعلمين", lat: 31.0455, lng: 46.2545 },
+            { name: "حي الأطباء", lat: 31.0485, lng: 46.2625 },
+            { name: "حي المهندسين", lat: 31.0515, lng: 46.2595 },
+            
+            // الأحياء الشرقية
+            { name: "حي الشرقية", lat: 31.0430, lng: 46.2750 },
+            { name: "حي الربيع", lat: 31.0395, lng: 46.2720 },
+            { name: "حي الخضراء", lat: 31.0360, lng: 46.2690 },
+            { name: "حي الأندلس", lat: 31.0525, lng: 46.2765 },
+            { name: "حي الفرات", lat: 31.0475, lng: 46.2735 },
+            
+            // الأحياء الغربية
+            { name: "حي الغربية", lat: 31.0420, lng: 46.2420 },
+            { name: "حي الصمود", lat: 31.0385, lng: 46.2390 },
+            { name: "حي الانتصار", lat: 31.0450, lng: 46.2450 },
+            { name: "حي الوحدة", lat: 31.0505, lng: 46.2485 },
+            
+            // الأحياء الشمالية
+            { name: "حي الشمالية", lat: 31.0580, lng: 46.2580 },
+            { name: "حي النهضة", lat: 31.0615, lng: 46.2615 },
+            { name: "حي التحرير", lat: 31.0650, lng: 46.2650 },
+            { name: "حي الحرية", lat: 31.0685, lng: 46.2685 },
+            { name: "حي السلام", lat: 31.0720, lng: 46.2720 },
+            
+            // الأحياء الجنوبية
+            { name: "حي الجنوبية", lat: 31.0280, lng: 46.2560 },
+            { name: "حي الصناعي", lat: 31.0245, lng: 46.2620 },
+            { name: "حي العمال", lat: 31.0310, lng: 46.2525 },
+            { name: "حي الشعب", lat: 31.0275, lng: 46.2495 },
+            
+            // أحياء أخرى
+            { name: "حي الجزائر", lat: 31.0540, lng: 46.2540 },
+            { name: "حي الأمل", lat: 31.0405, lng: 46.2635 },
+            { name: "حي النور", lat: 31.0435, lng: 46.2665 },
+            { name: "حي الإيمان", lat: 31.0465, lng: 46.2695 },
+            { name: "حي الصادق", lat: 31.0495, lng: 46.2565 },
+            { name: "حي الكاظم", lat: 31.0525, lng: 46.2535 },
+            { name: "حي الجواد", lat: 31.0555, lng: 46.2605 },
+            { name: "حي الباقر", lat: 31.0585, lng: 46.2635 },
+            { name: "حي العسكريين", lat: 31.0340, lng: 46.2580 },
+            { name: "حي الرسالة", lat: 31.0370, lng: 46.2610 },
+            { name: "حي الإخلاص", lat: 31.0400, lng: 46.2640 },
+            { name: "حي التضامن", lat: 31.0430, lng: 46.2470 },
+            { name: "حي الأخوة", lat: 31.0460, lng: 46.2500 },
+            { name: "حي المحبة", lat: 31.0490, lng: 46.2530 },
+            { name: "حي الوفاء", lat: 31.0520, lng: 46.2560 },
+            { name: "حي الإخاء", lat: 31.0550, lng: 46.2590 },
+            { name: "حي العدالة", lat: 31.0325, lng: 46.2545 },
+            { name: "حي المساواة", lat: 31.0355, lng: 46.2575 },
+            { name: "حي الكفاح", lat: 31.0385, lng: 46.2605 },
+            { name: "حي النضال", lat: 31.0415, lng: 46.2635 },
+            { name: "حي البطولة", lat: 31.0445, lng: 46.2665 },
+            { name: "حي الشموخ", lat: 31.0475, lng: 46.2695 },
+            { name: "حي العزة", lat: 31.0505, lng: 46.2525 },
+            { name: "حي الكرامة الثانية", lat: 31.0535, lng: 46.2555 }
+        ];
+
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+
+            searchInput.addEventListener('focus', () => {
+                searchInput.style.borderColor = '#667eea';
+            });
+
+            searchInput.addEventListener('blur', () => {
+                searchInput.style.borderColor = '#e2e8f0';
+                setTimeout(() => {
+                    searchResults.style.display = 'none';
+                }, 200);
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                
+                if (query.length === 0) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                const filtered = nasiriyahAreas.filter(area => 
+                    area.name.toLowerCase().includes(query)
+                );
+
+                if (filtered.length === 0) {
+                    searchResults.innerHTML = '<div style="padding: 15px; text-align: center; color: #718096;">لا توجد نتائج</div>';
+                    searchResults.style.display = 'block';
+                    return;
+                }
+
+                searchResults.innerHTML = filtered.map(area => `
+                    <div class="search-result-item" 
+                         data-lat="${area.lat}" 
+                         data-lng="${area.lng}"
+                         data-name="${area.name}"
+                         style="padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #e2e8f0; transition: background 0.2s ease;">
+                        <div style="font-weight: 600; color: #2d3748;">📍 ${area.name}</div>
+                    </div>
+                `).join('');
+
+                searchResults.style.display = 'block';
+
+                document.querySelectorAll('.search-result-item').forEach(item => {
+                    item.addEventListener('mouseenter', () => {
+                        item.style.background = '#f7fafc';
+                    });
+                    item.addEventListener('mouseleave', () => {
+                        item.style.background = 'white';
+                    });
+                    item.addEventListener('click', () => {
+                        const lat = parseFloat(item.dataset.lat);
+                        const lng = parseFloat(item.dataset.lng);
+                        const name = item.dataset.name;
+                        
+                        selectLocation(lat, lng, name);
+                        searchInput.value = name;
+                        searchResults.style.display = 'none';
+                    });
+                });
+            });
+        }
+
+        function selectLocation(lat, lng, name) {
+            const endLocation = [lat, lng];
+            
+            // إزالة علامة البحث السابقة إن وجدت
+            if (searchMarker) {
+                map.removeLayer(searchMarker);
+            }
+            
+            // إزالة علامة التسليم السابقة
+            if (endMarker) {
+                map.removeLayer(endMarker);
+            }
+            
+            if (routeLine) {
+                map.removeLayer(routeLine);
+            }
+
+            // إضافة علامة موقع التسليم (حمراء)
+            const endIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background-color: #f56565; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            endMarker = L.marker(endLocation, { icon: endIcon })
+                .addTo(map)
+                .bindPopup(`<div class="custom-popup">🎯 موقع التسليم: ${name}</div>`)
+                .openPopup();
+
+            // رسم الخط بين نقطة الانطلاق (الخضراء) والتسليم (الحمراء)
+            routeLine = L.polyline([startLocation, endLocation], {
+                color: '#667eea',
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '10, 10'
+            }).addTo(map);
+
+            // حساب المسافة والسعر
+            const distance = calculateDistance(startLocation[0], startLocation[1], endLocation[0], endLocation[1]);
+            const price = calculatePrice(distance);
+
+            document.getElementById('distance-display').textContent = distance.toFixed(2) + ' كم';
+            document.getElementById('price-display').textContent = price.toLocaleString('en-US') + ' دينار';
+
+            map.setView(endLocation, 15);
+
+            const successMessage = document.createElement('div');
+            successMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #48bb78; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
+            successMessage.textContent = `✅ تم تحديد موقع التسليم: ${name}`;
+            document.body.appendChild(successMessage);
+
+            setTimeout(() => {
+                successMessage.remove();
+            }, 2500);
+        }
 
         function requestLocation() {
             if (!navigator.geolocation) {
@@ -561,10 +765,11 @@
 
         window.addEventListener('load', () => {
             initMap();
+            setupSearch();
             if (window.elementSdk && window.elementSdk.config) {
                 onConfigChange(window.elementSdk.config);
             }
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc5fe7220ad0f3',t:'MTc2Mjg0OTI3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc92a96738d0f3',t:'MTc2Mjg1MTM1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
