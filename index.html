@@ -229,23 +229,14 @@
   <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
  <body>
-  <div id="permission-modal" class="permission-modal">
-   <div class="permission-content">
-    <div class="permission-icon">
-     📍
-    </div>
-    <h2>السماح بالوصول إلى موقعك</h2>
-    <p>نحتاج إلى إذنك للوصول إلى موقعك الحالي لتحديد نقطة الانطلاق وحساب تكلفة التوصيل بدقة.</p>
-    <div class="permission-buttons"><button class="permission-btn btn-allow" onclick="requestLocation()">السماح بالوصول</button> <button class="permission-btn btn-skip" onclick="skipLocation()">تخطي</button>
-    </div>
-   </div>
-  </div>
   <div class="container">
    <div class="header">
     <h1 id="app-title">تقدير سعر التوصيل</h1>
     <p id="instruction-text">انقر على الخريطة لتحديد موقع التسليم</p>
    </div>
    <div class="content">
+    <div style="margin-bottom: 20px; text-align: center;"><button id="locate-btn" class="permission-btn btn-allow" onclick="requestLocation()" style="display: inline-block;">📍 تحديد موقعي الحالي</button>
+    </div>
     <div id="map"></div>
     <div class="info-card">
      <div class="info-row"><span class="info-label" id="distance-label">المسافة:</span> <span class="info-value" id="distance-display">-- كم</span>
@@ -293,78 +284,7 @@
         };
 
         function requestLocation() {
-            locationRequested = true;
-            const modal = document.getElementById('permission-modal');
-            modal.style.display = 'none';
-            
-            if (navigator.geolocation) {
-                const loadingPopup = L.popup()
-                    .setLatLng(startLocation)
-                    .setContent('<div class="custom-popup">⏳ جاري تحديد موقعك...</div>')
-                    .openOn(map);
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        startLocation = [position.coords.latitude, position.coords.longitude];
-                        map.setView(startLocation, 15);
-                        
-                        if (startMarker) {
-                            map.removeLayer(startMarker);
-                        }
-                        
-                        map.closePopup(loadingPopup);
-                        
-                        const startIcon = L.divIcon({
-                            className: 'custom-marker',
-                            html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        });
-                        
-                        startMarker = L.marker(startLocation, { icon: startIcon })
-                            .addTo(map)
-                            .bindPopup('<div class="custom-popup">📍 موقعك الحالي</div>')
-                            .openPopup();
-                        
-                        const successMessage = document.createElement('div');
-                        successMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #48bb78; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
-                        successMessage.textContent = '✅ تم تحديد موقعك بنجاح!';
-                        document.body.appendChild(successMessage);
-                        
-                        setTimeout(() => {
-                            successMessage.remove();
-                        }, 3000);
-                    },
-                    (error) => {
-                        map.closePopup(loadingPopup);
-                        
-                        const errorMessage = document.createElement('div');
-                        errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f56565; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
-                        errorMessage.textContent = '⚠️ لم نتمكن من تحديد موقعك. سيتم استخدام الموقع الافتراضي.';
-                        document.body.appendChild(errorMessage);
-                        
-                        setTimeout(() => {
-                            errorMessage.remove();
-                        }, 4000);
-                        
-                        const startIcon = L.divIcon({
-                            className: 'custom-marker',
-                            html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        });
-                        
-                        startMarker = L.marker(startLocation, { icon: startIcon })
-                            .addTo(map)
-                            .bindPopup('<div class="custom-popup">📍 نقطة الانطلاق الافتراضية</div>');
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
+            if (!navigator.geolocation) {
                 const errorMessage = document.createElement('div');
                 errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f56565; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
                 errorMessage.textContent = '⚠️ متصفحك لا يدعم تحديد الموقع.';
@@ -373,35 +293,74 @@
                 setTimeout(() => {
                     errorMessage.remove();
                 }, 4000);
-                
-                const startIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-                
-                startMarker = L.marker(startLocation, { icon: startIcon })
-                    .addTo(map)
-                    .bindPopup('<div class="custom-popup">📍 نقطة الانطلاق</div>');
+                return;
             }
-        }
-
-        function skipLocation() {
-            locationRequested = true;
-            const modal = document.getElementById('permission-modal');
-            modal.style.display = 'none';
             
-            const startIcon = L.divIcon({
-                className: 'custom-marker',
-                html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-            });
+            const locateBtn = document.getElementById('locate-btn');
+            locateBtn.disabled = true;
+            locateBtn.textContent = '⏳ جاري التحديد...';
             
-            startMarker = L.marker(startLocation, { icon: startIcon })
-                .addTo(map)
-                .bindPopup('<div class="custom-popup">📍 نقطة الانطلاق الافتراضية</div>');
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    startLocation = [position.coords.latitude, position.coords.longitude];
+                    map.setView(startLocation, 15);
+                    
+                    if (startMarker) {
+                        map.removeLayer(startMarker);
+                    }
+                    
+                    const startIcon = L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    });
+                    
+                    startMarker = L.marker(startLocation, { icon: startIcon })
+                        .addTo(map)
+                        .bindPopup('<div class="custom-popup">📍 موقعك الحالي</div>')
+                        .openPopup();
+                    
+                    locateBtn.textContent = '✅ تم التحديد';
+                    locateBtn.style.background = '#48bb78';
+                    
+                    setTimeout(() => {
+                        locateBtn.disabled = false;
+                        locateBtn.textContent = '📍 تحديد موقعي الحالي';
+                        locateBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    }, 2000);
+                },
+                (error) => {
+                    let errorText = '⚠️ ';
+                    
+                    if (error.code === 1) {
+                        errorText += 'يرجى السماح بالوصول للموقع من إعدادات المتصفح.';
+                    } else if (error.code === 2) {
+                        errorText += 'الموقع غير متاح حالياً.';
+                    } else if (error.code === 3) {
+                        errorText += 'انتهت مهلة الطلب. حاول مرة أخرى.';
+                    } else {
+                        errorText += 'حدث خطأ في تحديد الموقع.';
+                    }
+                    
+                    const errorMessage = document.createElement('div');
+                    errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f56565; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold; max-width: 90%; text-align: center;';
+                    errorMessage.textContent = errorText;
+                    document.body.appendChild(errorMessage);
+                    
+                    setTimeout(() => {
+                        errorMessage.remove();
+                    }, 5000);
+                    
+                    locateBtn.disabled = false;
+                    locateBtn.textContent = '📍 تحديد موقعي الحالي';
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
         }
 
         function initMap() {
@@ -431,6 +390,18 @@
                 fillOpacity: 0.05,
                 dashArray: '5, 10'
             }).addTo(map);
+
+            // إضافة نقطة الانطلاق الافتراضية
+            const startIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+            
+            startMarker = L.marker(startLocation, { icon: startIcon })
+                .addTo(map)
+                .bindPopup('<div class="custom-popup">📍 نقطة الانطلاق الافتراضية<br><small>اضغط الزر أعلاه لتحديد موقعك</small></div>');
 
             map.on('click', function(e) {
                 const endLocation = [e.latlng.lat, e.latlng.lng];
@@ -595,5 +566,5 @@
             }
         });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc57038631d0f3',t:'MTc2Mjg0ODkwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc5fe7220ad0f3',t:'MTc2Mjg0OTI3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
