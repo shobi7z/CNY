@@ -1,775 +1,1277 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
  <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تقدير سعر التوصيل</title>
-  <script src="/_sdk/element_sdk.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <title>Radiography Positioning Atlas</title><!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script><!-- Canva SDKs -->
+  <script src="/_sdk/element_sdk.js"></script><!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAa2PVwT36vFMm7YclMe774O0FI3gHq18A",
+      authDomain: "racedasia.firebaseapp.com",
+      databaseURL: "https://racedasia-default-rtdb.firebaseio.com",
+      projectId: "racedasia",
+      storageBucket: "racedasia.firebasestorage.app",
+      messagingSenderId: "159044675488",
+      appId: "1:159044675488:web:a65302f190c0e7011fe6c5",
+      measurementId: "G-P271HH75LY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Expose Firebase functions globally
+    window.firebaseDB = {
+      database,
+      ref,
+      onValue,
+      push,
+      update,
+      remove
+    };
+
+    // Signal that Firebase is ready
+    window.dispatchEvent(new Event('firebaseReady'));
+  </script>
   <style>
-        body {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        html {
-            height: 100%;
-        }
-        
-        .container {
-            width: 90%;
-            max-width: 900px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            margin: 20px;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 32px;
-            font-weight: bold;
-        }
-        
-        .header p {
-            margin: 10px 0 0 0;
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        #map {
-            width: 100%;
-            height: 400px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        }
-        
-        .info-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .info-row:last-child {
-            margin-bottom: 0;
-        }
-        
-        .info-label {
-            font-size: 18px;
-            color: #4a5568;
-            font-weight: 600;
-        }
-        
-        .info-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .price-value {
-            font-size: 28px;
-            color: #48bb78;
-        }
-        
-        .pricing-table {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            border: 2px solid #e2e8f0;
-        }
-        
-        .pricing-table h3 {
-            margin: 0 0 15px 0;
-            color: #2d3748;
-            font-size: 20px;
-            text-align: center;
-        }
-        
-        .price-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border-right: 4px solid #667eea;
-        }
-        
-        .price-row:last-child {
-            margin-bottom: 0;
-        }
-        
-        .distance-range {
-            font-weight: 600;
-            color: #4a5568;
-        }
-        
-        .price-amount {
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .leaflet-popup-content-wrapper {
-            border-radius: 10px;
-        }
-        
-        .custom-popup {
-            text-align: center;
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .permission-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        
-        .permission-content {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        }
-        
-        .permission-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        
-        .permission-content h2 {
-            color: #2d3748;
-            margin: 0 0 15px 0;
-            font-size: 24px;
-        }
-        
-        .permission-content p {
-            color: #4a5568;
-            margin: 0 0 30px 0;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        
-        .permission-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-        
-        .permission-btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-allow {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-allow:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-skip {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-        
-        .btn-skip:hover {
-            background: #cbd5e0;
-        }
-    </style>
+    body {
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .app-wrapper {
+      width: 100%;
+      height: 100%;
+    }
+    /* Simple focus outline for accessibility */
+    .focus-outline:focus-visible {
+      outline: 3px solid rgba(255, 255, 255, 0.8);
+      outline-offset: 2px;
+    }
+    /* Simple scrollbar refinement */
+    .scroll-area::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scroll-area::-webkit-scrollbar-thumb {
+      border-radius: 9999px;
+    }
+  </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
-  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
  <body>
-  <div class="container">
-   <div class="header">
-    <h1 id="app-title">تقدير سعر التوصيل</h1>
-    <p id="instruction-text">انقر على الخريطة لتحديد موقع التسليم</p>
-   </div>
-   <div class="content">
-    <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"><button id="locate-btn" class="permission-btn btn-allow" onclick="requestLocation()" style="flex: 0 0 auto;">📍 تحديد موقعي الحالي</button>
-     <div style="flex: 1; min-width: 250px; position: relative;"><input type="text" id="search-input" placeholder="🔍 ابحث عن منطقة في الناصرية..." style="width: 100%; padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: all 0.3s ease;">
-      <div id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 300px; overflow-y: auto; z-index: 1000; display: none; margin-top: 5px;"></div>
+  <div id="app-root" class="app-wrapper w-full h-full flex flex-col" role="application" aria-label="Radiography positioning atlas">
+   <header class="w-full">
+    <div class="max-w-6xl mx-auto px-4 pt-4 pb-3 flex flex-col gap-1">
+     <h1 id="app-title" class="text-2xl font-semibold tracking-tight"></h1>
+     <p id="app-subtitle" class="text-sm opacity-80"></p>
+    </div>
+   </header>
+   <main class="w-full flex-1">
+    <div class="max-w-6xl mx-auto px-4 pb-4 h-full flex flex-col"><!-- Layout: 3 columns on desktop, stacked on mobile -->
+     <div class="flex flex-col lg:flex-row gap-4 min-h-full flex-1"><!-- LEFT: Regions & subregions -->
+      <aside class="lg:w-1/4 w-full rounded-xl shadow-lg p-4 flex flex-col gap-3" aria-label="Body regions">
+       <div class="flex items-center justify-between mb-1">
+        <h2 id="region-panel-title" class="text-base font-semibold"></h2>
+       </div>
+       <div class="flex-1 flex flex-col gap-3"><!-- Major regions list -->
+        <div>
+         <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70 mb-2">Regions</h3>
+         <nav aria-label="Body regions" class="flex flex-wrap gap-2"><!-- buttons created in JS --> <button type="button" class="region-btn px-4 py-2 rounded-full text-sm font-medium focus-outline" data-region="Head &amp; Neck">Head &amp; Neck</button> <button type="button" class="region-btn px-4 py-2 rounded-full text-sm font-medium focus-outline" data-region="Thorax">Thorax</button> <button type="button" class="region-btn px-4 py-2 rounded-full text-sm font-medium focus-outline" data-region="Abdomen &amp; Pelvis">Abdomen &amp; Pelvis</button> <button type="button" class="region-btn px-4 py-2 rounded-full text-sm font-medium focus-outline" data-region="Upper Limb">Upper Limb</button> <button type="button" class="region-btn px-4 py-2 rounded-full text-sm font-medium focus-outline" data-region="Lower Limb">Lower Limb</button> <button type="button" class="region-btn px-4 py-2 rounded-full text-sm font-medium focus-outline" data-region="Spine">Spine</button>
+         </nav>
+        </div><!-- Subregion pills (anatomical parts) -->
+        <div class="flex-1 flex flex-col gap-2">
+         <div class="flex items-center justify-between">
+          <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Subregions</h3><span id="selected-region-label" class="text-xs opacity-70 truncate"></span>
+         </div>
+         <div id="subregion-container" class="scroll-area flex-1 overflow-auto flex flex-wrap gap-2 pr-1" aria-label="Subregions"><!-- Filled in JS based on region selection -->
+         </div>
+        </div>
+       </div>
+      </aside><!-- CENTER: List of projections for selected subregion -->
+      <section class="lg:w-2/4 w-full rounded-xl shadow-lg p-4 flex flex-col gap-4" aria-label="Projections list and details">
+       <div class="flex items-center justify-between mb-2">
+        <div>
+         <h2 id="details-panel-title" class="text-lg font-semibold"></h2>
+         <p id="current-selection-label" class="text-sm opacity-80 mt-1"></p>
+        </div>
+       </div>
+       <div class="flex-1 flex flex-col gap-4 min-h-0"><!-- Projections list -->
+        <div class="w-full flex flex-col">
+         <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70 mb-2 flex items-center justify-between">Projections <span id="projection-count" class="text-xs opacity-70"></span></h3>
+         <div id="projection-list" class="scroll-area overflow-auto flex flex-wrap gap-2 pr-1 max-h-32" aria-label="Available projections"><!-- projection buttons in JS -->
+         </div>
+        </div><!-- Projection details -->
+        <div class="w-full flex-1 flex flex-col min-h-0 rounded-lg p-3 overflow-auto scroll-area">
+         <div id="no-selection-message" class="text-base opacity-80 text-center py-8">
+          Select a projection from the list or add a new one in the form.
+         </div>
+         <div id="projection-details" class="hidden flex flex-col gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+           <div>
+            <p class="font-semibold mb-1 text-sm">Region</p>
+            <p id="detail-region" class="opacity-80 text-base"></p>
+           </div>
+           <div>
+            <p class="font-semibold mb-1 text-sm">Subregion</p>
+            <p id="detail-subregion" class="opacity-80 text-base"></p>
+           </div>
+           <div>
+            <p class="font-semibold mb-1 text-sm">Projection</p>
+            <p id="detail-projection" class="opacity-80 text-base"></p>
+           </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+           <div class="sm:col-span-2">
+            <p class="font-semibold mb-1 text-sm">Patient Position</p>
+            <p id="detail-patient-position" class="opacity-80 whitespace-pre-line text-base leading-relaxed"></p>
+           </div>
+           <div class="flex gap-4 sm:flex-col sm:gap-3">
+            <div>
+             <p class="font-semibold mb-1 text-sm">kV</p>
+             <p id="detail-kv" class="opacity-80 text-base"></p>
+            </div>
+            <div>
+             <p class="font-semibold mb-1 text-sm">mAs</p>
+             <p id="detail-mas" class="opacity-80 text-base"></p>
+            </div>
+           </div>
+          </div>
+          <div>
+           <p class="font-semibold mb-1 text-sm">Notes</p>
+           <p id="detail-notes" class="opacity-80 whitespace-pre-line text-base leading-relaxed"></p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"><!-- Real photo placeholder -->
+           <figure class="rounded-lg overflow-hidden flex flex-col border p-2">
+            <figcaption class="text-sm font-semibold mb-2 text-center">
+             Real Image
+            </figcaption>
+            <div class="flex-1 flex items-center justify-center min-h-[300px] bg-black bg-opacity-20 rounded">
+             <div id="real-image-fallback" class="text-xs opacity-70 px-3 text-center">
+              Real image URL not set.
+             </div><img id="real-image" alt="Real positioning reference" class="hidden max-h-96 w-full object-contain rounded" onerror="this.src=''; this.alt=''; this.classList.add('hidden'); document.getElementById('real-image-fallback').classList.remove('hidden'); document.getElementById('real-image-fallback').textContent='Failed to load image. Check URL.';">
+            </div>
+           </figure><!-- X-ray image placeholder -->
+           <figure class="rounded-lg overflow-hidden flex flex-col border p-2">
+            <figcaption class="text-sm font-semibold mb-2 text-center">
+             X-ray Image
+            </figcaption>
+            <div class="flex-1 flex items-center justify-center min-h-[300px] bg-black bg-opacity-20 rounded">
+             <div id="xray-image-fallback" class="text-xs opacity-70 px-3 text-center">
+              X-ray image URL not set.
+             </div><img id="xray-image" alt="Radiographic appearance reference" class="hidden max-h-96 w-full object-contain rounded" onerror="this.src=''; this.alt=''; this.classList.add('hidden'); document.getElementById('xray-image-fallback').classList.remove('hidden'); document.getElementById('xray-image-fallback').textContent='Failed to load image. Check URL.';">
+            </div>
+           </figure>
+          </div>
+          <div class="flex flex-wrap justify-end gap-2 mt-2"><button id="edit-current-btn" type="button" class="px-4 py-2 rounded-full text-sm font-medium focus-outline"> Edit </button> <button id="delete-current-btn" type="button" class="px-4 py-2 rounded-full text-sm font-medium focus-outline"> Delete </button>
+          </div><!-- Inline edit password prompt -->
+          <div id="edit-password-prompt" class="hidden mt-3 p-3 rounded-lg border">
+           <p class="text-sm font-semibold mb-2">Enter password to edit</p>
+           <div class="flex flex-col gap-2"><input id="edit-password-input" type="password" class="w-full rounded-md px-3 py-2 text-sm focus-outline" placeholder="Enter password">
+            <div class="flex gap-2"><button id="confirm-edit-password-btn" type="button" class="flex-1 px-3 py-2 rounded-full text-sm font-medium focus-outline"> Unlock &amp; Edit </button> <button id="cancel-edit-password-btn" type="button" class="px-3 py-2 rounded-full text-sm font-medium focus-outline"> Cancel </button>
+            </div>
+            <p id="edit-password-error" class="text-xs hidden"></p>
+           </div>
+          </div><!-- Inline delete confirmation -->
+          <div id="delete-confirmation" class="hidden mt-2 flex flex-wrap items-center justify-end gap-2 text-sm"><span>Confirm delete?</span> <button id="confirm-delete-btn" type="button" class="px-4 py-2 rounded-full font-medium focus-outline"> Yes, delete </button> <button id="cancel-delete-btn" type="button" class="px-4 py-2 rounded-full font-medium focus-outline"> Cancel </button>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section><!-- RIGHT: Form for adding/updating projection -->
+      <section class="lg:w-1/4 w-full rounded-xl shadow-lg p-4 flex flex-col gap-3" aria-label="Projection form"><!-- Password unlock screen -->
+       <div id="password-unlock-screen" class="flex-1 flex flex-col items-center justify-center gap-3">
+        <div class="text-center">
+         <h2 id="unlock-title" class="text-base font-semibold mb-2">Manager Access</h2>
+         <p class="text-xs opacity-80 mb-4">Enter password to add or edit projections</p>
+        </div>
+        <div class="w-full max-w-xs"><label for="unlock-password" class="block mb-1 font-medium text-xs">Password</label> <input id="unlock-password" type="password" class="w-full rounded-md px-3 py-2 text-xs focus-outline" placeholder="Enter manager password"> <button id="unlock-btn" type="button" class="w-full mt-2 px-3 py-2 rounded-full text-xs font-semibold focus-outline"> Unlock Form </button>
+         <p id="unlock-error" class="text-[10px] mt-1 hidden" style="color: #fecaca;"></p>
+        </div>
+       </div><!-- Main form (hidden until unlocked) -->
+       <div id="form-content-wrapper" class="hidden flex-1 flex flex-col gap-3">
+        <div class="flex items-center justify-between mb-1">
+         <h2 id="form-panel-title" class="text-base font-semibold"></h2>
+         <div class="flex items-center gap-2"><span id="form-mode-label" class="text-[11px] opacity-70">New</span> <button id="lock-form-btn" type="button" class="text-[10px] px-2 py-0.5 rounded-full focus-outline" title="Lock form"> 🔒 Lock </button>
+         </div>
+        </div>
+        <form id="projection-form" class="flex-1 flex flex-col gap-2 text-xs" aria-label="Add or edit projection"><!-- Region select -->
+         <div><label for="form-region" class="block mb-0.5 font-medium">Region</label> <select id="form-region" name="region" class="w-full rounded-md px-2 py-1 text-xs focus-outline"> <option value="">Select region...</option> <option value="Head &amp; Neck">Head &amp; Neck</option> <option value="Thorax">Thorax</option> <option value="Abdomen &amp; Pelvis">Abdomen &amp; Pelvis</option> <option value="Upper Limb">Upper Limb</option> <option value="Lower Limb">Lower Limb</option> <option value="Spine">Spine</option> </select>
+         </div><!-- Subregion select (dynamic) -->
+         <div><label for="form-subregion" class="block mb-0.5 font-medium">Subregion</label> <select id="form-subregion" name="subregion" class="w-full rounded-md px-2 py-1 text-xs focus-outline"> <option value="">Select subregion...</option> </select>
+         </div><!-- Anatomical part free text -->
+         <div><label for="form-anatomical-part" class="block mb-0.5 font-medium">Anatomical Part (optional)</label> <input id="form-anatomical-part" name="anatomical_part" type="text" class="w-full rounded-md px-2 py-1 text-xs focus-outline" placeholder="e.g. C-spine, Knee joint">
+         </div><!-- Projection name (AP, PA, Lateral...) -->
+         <div><label for="form-projection" class="block mb-0.5 font-medium">Projection</label> <input id="form-projection" name="projection" type="text" class="w-full rounded-md px-2 py-1 text-xs focus-outline" placeholder="e.g. AP, Lateral, AP/Lat, Oblique" required>
+         </div><!-- Patient position -->
+         <div><label for="form-patient-position" class="block mb-0.5 font-medium">Patient Position</label> <textarea id="form-patient-position" name="patient_position" class="w-full rounded-md px-2 py-1 text-xs focus-outline" rows="3" placeholder="Describe how the patient is positioned..."></textarea>
+         </div><!-- kV / mAs -->
+         <div class="flex gap-2">
+          <div class="flex-1"><label for="form-kv" class="block mb-0.5 font-medium">kV</label> <input id="form-kv" name="kv" type="number" min="0" class="w-full rounded-md px-2 py-1 text-xs focus-outline" placeholder="e.g. 70">
+          </div>
+          <div class="flex-1"><label for="form-mas" class="block mb-0.5 font-medium">mAs</label> <input id="form-mas" name="mas" type="number" min="0" step="0.1" class="w-full rounded-md px-2 py-1 text-xs focus-outline" placeholder="e.g. 5">
+          </div>
+         </div><!-- Notes -->
+         <div><label for="form-notes" class="block mb-0.5 font-medium">Notes</label> <textarea id="form-notes" name="notes" class="w-full rounded-md px-2 py-1 text-xs focus-outline" rows="2" placeholder="Extra tips, centering, collimation, breathing instruction..."></textarea>
+         </div><!-- Image URLs -->
+         <div><label for="form-real-image-url" class="block mb-0.5 font-medium">Real Image URL</label> <input id="form-real-image-url" name="real_image_url" type="url" class="w-full rounded-md px-2 py-1 text-xs focus-outline" placeholder="https://...">
+         </div>
+         <div><label for="form-xray-image-url" class="block mb-0.5 font-medium">X-ray Image URL</label> <input id="form-xray-image-url" name="xray_image_url" type="url" class="w-full rounded-md px-2 py-1 text-xs focus-outline" placeholder="https://...">
+         </div>
+         <div class="mt-1 flex flex-col gap-1">
+          <div class="flex gap-2"><button id="save-btn" type="submit" class="flex-1 px-3 py-1 rounded-full text-[11px] font-semibold focus-outline"> Save </button> <button id="reset-btn" type="button" class="px-3 py-1 rounded-full text-[11px] font-medium focus-outline"> Reset </button>
+          </div>
+          <p id="form-helper" class="text-[10px] opacity-80">Use AP, PA, Lateral, Oblique, etc. You can create as many projections as you need for each subregion.</p>
+          <p id="form-status" class="text-[10px] mt-0.5"></p>
+         </div>
+        </form>
+       </div>
+      </section>
      </div>
     </div>
-    <div id="map"></div>
-    <div class="info-card">
-     <div class="info-row"><span class="info-label" id="distance-label">المسافة:</span> <span class="info-value" id="distance-display">-- كم</span>
+   </main>
+   <footer class="w-full">
+    <div class="max-w-6xl mx-auto px-4 pb-3 pt-2 flex flex-col gap-2">
+     <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] opacity-80"><span>Dataset stored securely in your Canva Sheet.</span> <span id="record-count-label"></span>
      </div>
-     <div class="info-row"><span class="info-label" id="price-label">تكلفة التوصيل:</span> <span class="info-value price-value" id="price-display">-- دينار</span>
-     </div>
-    </div>
-    <div class="pricing-table">
-     <h3>جدول الأسعار</h3>
-     <div class="price-row"><span class="distance-range">1 - 1.5 كم</span> <span class="price-amount">1,500 دينار</span>
-     </div>
-     <div class="price-row"><span class="distance-range">1.6 - 2.5 كم</span> <span class="price-amount">2,000 دينار</span>
-     </div>
-     <div class="price-row"><span class="distance-range">أكثر من 3 كم</span> <span class="price-amount">2,500 دينار</span>
+     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 text-base opacity-90 border-t pt-2">
+      <div class="flex items-center gap-2"><span>Designed by</span> <a href="https://www.instagram.com/mojtabakr1.sc/" target="_blank" rel="noopener noreferrer" class="font-semibold hover:underline focus-outline cursor-pointer" style="color: #38bdf8;"> Mr. Mojtaba Kareem </a>
+      </div><span class="hidden sm:inline opacity-50">•</span>
+      <div class="flex items-center gap-2"><span>Helping student</span> <span class="font-semibold" style="color: #38bdf8;">Zahra Jamal</span> <span class="opacity-50">•</span> <span>Sponsored by</span> <a href="https://www.instagram.com/dhiscan_academy/" target="_blank" rel="noopener noreferrer" class="font-semibold hover:underline focus-outline cursor-pointer" style="color: #38bdf8;"> dhiscan_academy </a>
+      </div>
      </div>
     </div>
-   </div>
+   </footer><!-- Toast / message area -->
+   <div id="toast" class="fixed bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full text-xs font-medium shadow-md opacity-0 pointer-events-none transition-opacity duration-300"></div>
   </div>
   <script>
-        const defaultConfig = {
-            app_title: "تقدير سعر التوصيل - الناصرية",
-            instruction_text: "انقر على الخريطة لتحديد موقع التسليم داخل الناصرية",
-            price_label: "تكلفة التوصيل",
-            distance_label: "المسافة",
-            primary_color: "#667eea",
-            secondary_color: "#764ba2",
-            background_color: "#f5f7fa",
-            text_color: "#2d3748",
-            accent_color: "#48bb78"
-        };
+    // -----------------------
+    // CONFIG & THEME
+    // -----------------------
+    const defaultConfig = {
+      app_title: "Radiography Positioning Atlas",
+      app_subtitle: "Tap a body region, choose the subregion, then see and manage all AP, Lateral, Oblique and other projections.",
+      region_panel_title: "Body Regions",
+      details_panel_title: "Projection Details",
+      form_panel_title: "Add / Edit Projection",
+      save_button_text: "Save Projection",
+      reset_button_text: "Reset Form",
 
-        let map;
-        let startMarker;
-        let endMarker;
-        let routeLine;
-        let startLocation = [31.0439, 46.2572]; // Nasiriyah coordinates
-        let locationRequested = false;
-        let searchMarker;
-        
-        // حدود مدينة الناصرية
-        const nasiriyahBounds = {
-            north: 31.0900,
-            south: 31.0000,
-            east: 46.3100,
-            west: 46.2000
-        };
+      // Colors (max 5)
+      background_color: "#0b1020",     // BACKGROUND
+      surface_color: "#141a30",        // SECONDARY_SURFACE
+      text_color: "#e6edf7",           // TEXT
+      primary_action_color: "#4f46e5", // PRIMARY_ACTION
+      secondary_action_color: "#38bdf8", // SECONDARY_ACTION
 
-        // جميع أحياء مدينة الناصرية
-        const nasiriyahAreas = [
-            // الأحياء المركزية
-            { name: "حي الحبوبي", lat: 31.0439, lng: 46.2572 },
-            { name: "حي الشهداء", lat: 31.0520, lng: 46.2650 },
-            { name: "حي السراي", lat: 31.0445, lng: 46.2585 },
-            { name: "حي الجمهورية", lat: 31.0470, lng: 46.2610 },
-            { name: "حي الثورة", lat: 31.0490, lng: 46.2530 },
-            { name: "حي النصر", lat: 31.0410, lng: 46.2680 },
-            { name: "حي الإسكان", lat: 31.0380, lng: 46.2480 },
-            { name: "حي الجمعية", lat: 31.0460, lng: 46.2590 },
-            
-            // الأحياء السكنية
-            { name: "حي الزهراء", lat: 31.0500, lng: 46.2700 },
-            { name: "حي العسكري", lat: 31.0350, lng: 46.2550 },
-            { name: "حي الكرامة", lat: 31.0320, lng: 46.2590 },
-            { name: "حي الحسين", lat: 31.0550, lng: 46.2720 },
-            { name: "حي الفداء", lat: 31.0390, lng: 46.2510 },
-            { name: "حي البساتين", lat: 31.0600, lng: 46.2800 },
-            { name: "حي الأمير", lat: 31.0365, lng: 46.2615 },
-            { name: "حي الضباط", lat: 31.0425, lng: 46.2505 },
-            { name: "حي المعلمين", lat: 31.0455, lng: 46.2545 },
-            { name: "حي الأطباء", lat: 31.0485, lng: 46.2625 },
-            { name: "حي المهندسين", lat: 31.0515, lng: 46.2595 },
-            
-            // الأحياء الشرقية
-            { name: "حي الشرقية", lat: 31.0430, lng: 46.2750 },
-            { name: "حي الربيع", lat: 31.0395, lng: 46.2720 },
-            { name: "حي الخضراء", lat: 31.0360, lng: 46.2690 },
-            { name: "حي الأندلس", lat: 31.0525, lng: 46.2765 },
-            { name: "حي الفرات", lat: 31.0475, lng: 46.2735 },
-            
-            // الأحياء الغربية
-            { name: "حي الغربية", lat: 31.0420, lng: 46.2420 },
-            { name: "حي الصمود", lat: 31.0385, lng: 46.2390 },
-            { name: "حي الانتصار", lat: 31.0450, lng: 46.2450 },
-            { name: "حي الوحدة", lat: 31.0505, lng: 46.2485 },
-            
-            // الأحياء الشمالية
-            { name: "حي الشمالية", lat: 31.0580, lng: 46.2580 },
-            { name: "حي النهضة", lat: 31.0615, lng: 46.2615 },
-            { name: "حي التحرير", lat: 31.0650, lng: 46.2650 },
-            { name: "حي الحرية", lat: 31.0685, lng: 46.2685 },
-            { name: "حي السلام", lat: 31.0720, lng: 46.2720 },
-            
-            // الأحياء الجنوبية
-            { name: "حي الجنوبية", lat: 31.0280, lng: 46.2560 },
-            { name: "حي الصناعي", lat: 31.0245, lng: 46.2620 },
-            { name: "حي العمال", lat: 31.0310, lng: 46.2525 },
-            { name: "حي الشعب", lat: 31.0275, lng: 46.2495 },
-            
-            // أحياء أخرى
-            { name: "حي الجزائر", lat: 31.0540, lng: 46.2540 },
-            { name: "حي الأمل", lat: 31.0405, lng: 46.2635 },
-            { name: "حي النور", lat: 31.0435, lng: 46.2665 },
-            { name: "حي الإيمان", lat: 31.0465, lng: 46.2695 },
-            { name: "حي الصادق", lat: 31.0495, lng: 46.2565 },
-            { name: "حي الكاظم", lat: 31.0525, lng: 46.2535 },
-            { name: "حي الجواد", lat: 31.0555, lng: 46.2605 },
-            { name: "حي الباقر", lat: 31.0585, lng: 46.2635 },
-            { name: "حي العسكريين", lat: 31.0340, lng: 46.2580 },
-            { name: "حي الرسالة", lat: 31.0370, lng: 46.2610 },
-            { name: "حي الإخلاص", lat: 31.0400, lng: 46.2640 },
-            { name: "حي التضامن", lat: 31.0430, lng: 46.2470 },
-            { name: "حي الأخوة", lat: 31.0460, lng: 46.2500 },
-            { name: "حي المحبة", lat: 31.0490, lng: 46.2530 },
-            { name: "حي الوفاء", lat: 31.0520, lng: 46.2560 },
-            { name: "حي الإخاء", lat: 31.0550, lng: 46.2590 },
-            { name: "حي العدالة", lat: 31.0325, lng: 46.2545 },
-            { name: "حي المساواة", lat: 31.0355, lng: 46.2575 },
-            { name: "حي الكفاح", lat: 31.0385, lng: 46.2605 },
-            { name: "حي النضال", lat: 31.0415, lng: 46.2635 },
-            { name: "حي البطولة", lat: 31.0445, lng: 46.2665 },
-            { name: "حي الشموخ", lat: 31.0475, lng: 46.2695 },
-            { name: "حي العزة", lat: 31.0505, lng: 46.2525 },
-            { name: "حي الكرامة الثانية", lat: 31.0535, lng: 46.2555 }
-        ];
+      // Typography
+      font_family: "Inter",
+      font_size: 14
+    };
 
-        function setupSearch() {
-            const searchInput = document.getElementById('search-input');
-            const searchResults = document.getElementById('search-results');
+    // Reference data: subregions per region (can be extended as you wish)
+    const regionToSubregions = {
+      "Head & Neck": [
+        "Skull",
+        "Facial bones",
+        "Sinuses",
+        "Cervical spine",
+        "Mandible"
+      ],
+      "Thorax": [
+        "Chest PA/AP",
+        "Ribs",
+        "Sternum",
+        "Clavicle",
+        "Scapula"
+      ],
+      "Abdomen & Pelvis": [
+        "Abdomen",
+        "Pelvis",
+        "Hip joint"
+      ],
+      "Upper Limb": [
+        "Shoulder",
+        "Humerus",
+        "Elbow",
+        "Forearm",
+        "Wrist",
+        "Hand"
+      ],
+      "Lower Limb": [
+        "Femur",
+        "Knee",
+        "Tibia / Fibula",
+        "Ankle",
+        "Foot"
+      ],
+      "Spine": [
+        "Cervical spine",
+        "Thoracic spine",
+        "Lumbar spine",
+        "Sacrum & Coccyx"
+      ]
+    };
 
-            searchInput.addEventListener('focus', () => {
-                searchInput.style.borderColor = '#667eea';
-            });
+    // Local state for Firebase
+    let currentData = [];              // all records
+    let currentRecordCount = 0;
+    let selectedRegion = "Spine";      // default
+    let selectedSubregion = "Lumbar spine";
+    let selectedProjectionBackendId = null; // currently viewed record
+    let editingBackendId = null;            // form is editing this record
+    const MANAGER_PASSWORD = "545454DMZ";   // Password for adding new projections
 
-            searchInput.addEventListener('blur', () => {
-                searchInput.style.borderColor = '#e2e8f0';
-                setTimeout(() => {
-                    searchResults.style.display = 'none';
-                }, 200);
-            });
+    // Cached DOM elements
+    const el = {};
 
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.trim().toLowerCase();
-                
-                if (query.length === 0) {
-                    searchResults.style.display = 'none';
-                    return;
-                }
+    function cacheDom() {
+      el.appTitle = document.getElementById("app-title");
+      el.appSubtitle = document.getElementById("app-subtitle");
+      el.regionPanelTitle = document.getElementById("region-panel-title");
+      el.detailsPanelTitle = document.getElementById("details-panel-title");
+      el.formPanelTitle = document.getElementById("form-panel-title");
+      el.currentSelectionLabel = document.getElementById("current-selection-label");
+      el.selectedRegionLabel = document.getElementById("selected-region-label");
+      el.subregionContainer = document.getElementById("subregion-container");
+      el.projectionList = document.getElementById("projection-list");
+      el.projectionCount = document.getElementById("projection-count");
+      el.projectionDetailsWrapper = document.getElementById("projection-details");
+      el.noSelectionMessage = document.getElementById("no-selection-message");
+      el.detailRegion = document.getElementById("detail-region");
+      el.detailSubregion = document.getElementById("detail-subregion");
+      el.detailProjection = document.getElementById("detail-projection");
+      el.detailPatientPosition = document.getElementById("detail-patient-position");
+      el.detailKv = document.getElementById("detail-kv");
+      el.detailMas = document.getElementById("detail-mas");
+      el.detailNotes = document.getElementById("detail-notes");
+      el.realImage = document.getElementById("real-image");
+      el.realImageFallback = document.getElementById("real-image-fallback");
+      el.xrayImage = document.getElementById("xray-image");
+      el.xrayImageFallback = document.getElementById("xray-image-fallback");
+      el.editCurrentBtn = document.getElementById("edit-current-btn");
+      el.deleteCurrentBtn = document.getElementById("delete-current-btn");
+      el.deleteConfirmation = document.getElementById("delete-confirmation");
+      el.confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+      el.cancelDeleteBtn = document.getElementById("cancel-delete-btn");
+      el.editPasswordPrompt = document.getElementById("edit-password-prompt");
+      el.editPasswordInput = document.getElementById("edit-password-input");
+      el.confirmEditPasswordBtn = document.getElementById("confirm-edit-password-btn");
+      el.cancelEditPasswordBtn = document.getElementById("cancel-edit-password-btn");
+      el.editPasswordError = document.getElementById("edit-password-error");
+      el.form = document.getElementById("projection-form");
+      el.formRegion = document.getElementById("form-region");
+      el.formSubregion = document.getElementById("form-subregion");
+      el.formAnatomicalPart = document.getElementById("form-anatomical-part");
+      el.formProjection = document.getElementById("form-projection");
+      el.formPatientPosition = document.getElementById("form-patient-position");
+      el.formKv = document.getElementById("form-kv");
+      el.formMas = document.getElementById("form-mas");
+      el.formNotes = document.getElementById("form-notes");
+      el.formRealImageUrl = document.getElementById("form-real-image-url");
+      el.formXrayImageUrl = document.getElementById("form-xray-image-url");
+      el.saveBtn = document.getElementById("save-btn");
+      el.resetBtn = document.getElementById("reset-btn");
+      el.formStatus = document.getElementById("form-status");
+      el.formModeLabel = document.getElementById("form-mode-label");
+      el.formHelper = document.getElementById("form-helper");
+      el.recordCountLabel = document.getElementById("record-count-label");
+      el.toast = document.getElementById("toast");
+      el.saveBtnTextHolder = document.getElementById("save-btn");
+      el.resetBtnTextHolder = document.getElementById("reset-btn");
+      el.passwordUnlockScreen = document.getElementById("password-unlock-screen");
+      el.formContentWrapper = document.getElementById("form-content-wrapper");
+      el.unlockPassword = document.getElementById("unlock-password");
+      el.unlockBtn = document.getElementById("unlock-btn");
+      el.unlockError = document.getElementById("unlock-error");
+      el.lockFormBtn = document.getElementById("lock-form-btn");
+      el.unlockTitle = document.getElementById("unlock-title");
+    }
 
-                const filtered = nasiriyahAreas.filter(area => 
-                    area.name.toLowerCase().includes(query)
-                );
+    // -----------------------
+    // THEME APPLICATION
+    // -----------------------
+    function applyTheme(config) {
+      const c = config || defaultConfig;
+      const bg = c.background_color || defaultConfig.background_color;
+      const surface = c.surface_color || defaultConfig.surface_color;
+      const text = c.text_color || defaultConfig.text_color;
+      const primary = c.primary_action_color || defaultConfig.primary_action_color;
+      const secondary = c.secondary_action_color || defaultConfig.secondary_action_color;
+      const fontFamily = c.font_family || defaultConfig.font_family;
+      const baseSize = Number(c.font_size || defaultConfig.font_size);
 
-                if (filtered.length === 0) {
-                    searchResults.innerHTML = '<div style="padding: 15px; text-align: center; color: #718096;">لا توجد نتائج</div>';
-                    searchResults.style.display = 'block';
-                    return;
-                }
+      // Base layout
+      document.body.style.backgroundColor = bg;
+      document.body.style.color = text;
+      document.body.style.fontFamily = `${fontFamily}, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      document.getElementById("app-root").style.color = text;
 
-                searchResults.innerHTML = filtered.map(area => `
-                    <div class="search-result-item" 
-                         data-lat="${area.lat}" 
-                         data-lng="${area.lng}"
-                         data-name="${area.name}"
-                         style="padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #e2e8f0; transition: background 0.2s ease;">
-                        <div style="font-weight: 600; color: #2d3748;">📍 ${area.name}</div>
-                    </div>
-                `).join('');
+      // Surfaces (cards)
+      const cards = document.querySelectorAll("aside, section");
+      cards.forEach(card => {
+        card.style.backgroundColor = surface;
+      });
 
-                searchResults.style.display = 'block';
+      // Edit password prompt border
+      if (el.editPasswordPrompt) {
+        el.editPasswordPrompt.style.borderColor = `${secondary}66`;
+        el.editPasswordPrompt.style.backgroundColor = `${surface}dd`;
+      }
 
-                document.querySelectorAll('.search-result-item').forEach(item => {
-                    item.addEventListener('mouseenter', () => {
-                        item.style.background = '#f7fafc';
-                    });
-                    item.addEventListener('mouseleave', () => {
-                        item.style.background = 'white';
-                    });
-                    item.addEventListener('click', () => {
-                        const lat = parseFloat(item.dataset.lat);
-                        const lng = parseFloat(item.dataset.lng);
-                        const name = item.dataset.name;
-                        
-                        selectLocation(lat, lng, name);
-                        searchInput.value = name;
-                        searchResults.style.display = 'none';
-                    });
-                });
-            });
+      // Scrollbar thumb using secondary color
+      const styleElId = "dynamic-scroll-style";
+      let styleEl = document.getElementById(styleElId);
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = styleElId;
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = `
+        .scroll-area::-webkit-scrollbar-thumb {
+          background-color: ${secondary};
+        }
+      `;
+
+      // Region buttons
+      document.querySelectorAll(".region-btn").forEach(btn => {
+        btn.style.backgroundColor = "transparent";
+        btn.style.border = `1px solid ${secondary}33`;
+        btn.style.color = text;
+      });
+
+      // Buttons
+      el.saveBtn.style.backgroundColor = primary;
+      el.saveBtn.style.color = "#ffffff";
+      el.resetBtn.style.backgroundColor = "transparent";
+      el.resetBtn.style.border = `1px solid ${secondary}66`;
+      el.resetBtn.style.color = text;
+
+      el.editCurrentBtn.style.backgroundColor = secondary;
+      el.editCurrentBtn.style.color = "#0b1020";
+      el.deleteCurrentBtn.style.backgroundColor = "transparent";
+      el.deleteCurrentBtn.style.border = `1px solid ${secondary}88`;
+      el.deleteCurrentBtn.style.color = text;
+
+      el.confirmDeleteBtn.style.backgroundColor = primary;
+      el.confirmDeleteBtn.style.color = "#ffffff";
+      el.cancelDeleteBtn.style.backgroundColor = "transparent";
+      el.cancelDeleteBtn.style.border = `1px solid ${secondary}88`;
+      el.cancelDeleteBtn.style.color = text;
+
+      el.confirmEditPasswordBtn.style.backgroundColor = primary;
+      el.confirmEditPasswordBtn.style.color = "#ffffff";
+      el.cancelEditPasswordBtn.style.backgroundColor = "transparent";
+      el.cancelEditPasswordBtn.style.border = `1px solid ${secondary}88`;
+      el.cancelEditPasswordBtn.style.color = text;
+
+      el.unlockBtn.style.backgroundColor = primary;
+      el.unlockBtn.style.color = "#ffffff";
+      el.lockFormBtn.style.backgroundColor = "transparent";
+      el.lockFormBtn.style.border = `1px solid ${secondary}66`;
+      el.lockFormBtn.style.color = text;
+
+      // Toast
+      el.toast.style.backgroundColor = "#000000cc";
+      el.toast.style.color = "#ffffff";
+
+      // Font sizes scaling
+      const titleSize = baseSize * 1.6;
+      const subtitleSize = baseSize * 0.9;
+      const panelTitleSize = baseSize * 1.1;
+      const labelSize = baseSize * 0.9;
+      const bodySize = baseSize;
+      const tinySize = baseSize * 0.8;
+
+      el.appTitle.style.fontSize = `${titleSize}px`;
+      el.appSubtitle.style.fontSize = `${subtitleSize}px`;
+      el.regionPanelTitle.style.fontSize = `${panelTitleSize}px`;
+      el.detailsPanelTitle.style.fontSize = `${panelTitleSize}px`;
+      el.formPanelTitle.style.fontSize = `${panelTitleSize}px`;
+
+      document.querySelectorAll("label").forEach(l => {
+        l.style.fontSize = `${labelSize}px`;
+      });
+
+      document.querySelectorAll("input, select, textarea, button, p, span, li, figcaption").forEach(node => {
+        if (!node.closest("h1") && !node.closest("h2")) {
+          node.style.fontSize = `${bodySize}px`;
+        }
+      });
+
+      document.querySelectorAll("#form-helper, #form-status, #record-count-label, #toast, footer span, #projection-count, #current-selection-label").forEach(node => {
+        node.style.fontSize = `${tinySize}px`;
+      });
+
+      // Highlight active region & subregion with colors
+      updateRegionSelectionStyles(config);
+      updateSubregionButtons(config);
+    }
+
+    // -----------------------
+    // TEXT FROM CONFIG
+    // -----------------------
+    async function applyTextFromConfig(config) {
+      const c = config || defaultConfig;
+      el.appTitle.textContent = c.app_title || defaultConfig.app_title;
+      el.appSubtitle.textContent = c.app_subtitle || defaultConfig.app_subtitle;
+      el.regionPanelTitle.textContent = c.region_panel_title || defaultConfig.region_panel_title;
+      el.detailsPanelTitle.textContent = c.details_panel_title || defaultConfig.details_panel_title;
+      el.formPanelTitle.textContent = c.form_panel_title || defaultConfig.form_panel_title;
+      el.saveBtn.textContent = c.save_button_text || defaultConfig.save_button_text;
+      el.resetBtn.textContent = c.reset_button_text || defaultConfig.reset_button_text;
+    }
+
+    // -----------------------
+    // TOAST / STATUS
+    // -----------------------
+    function showToast(message, isError = false) {
+      if (!el.toast) return;
+      el.toast.textContent = message;
+      el.toast.style.backgroundColor = isError ? "#b91c1c" : "#000000cc";
+      el.toast.style.opacity = "1";
+      el.toast.style.pointerEvents = "auto";
+      setTimeout(() => {
+        el.toast.style.opacity = "0";
+        el.toast.style.pointerEvents = "none";
+      }, 2200);
+    }
+
+    function setFormStatus(message, isError = false) {
+      el.formStatus.textContent = message || "";
+      el.formStatus.style.color = isError ? "#fecaca" : "#bbf7d0";
+    }
+
+    // -----------------------
+    // REGION & SUBREGION UI
+    // -----------------------
+    function updateRegionSelectionStyles(config) {
+      const c = config || defaultConfig;
+      const secondary = c.secondary_action_color || defaultConfig.secondary_action_color;
+      const surface = c.surface_color || defaultConfig.surface_color;
+      const text = c.text_color || defaultConfig.text_color;
+
+      document.querySelectorAll(".region-btn").forEach(btn => {
+        const region = btn.getAttribute("data-region");
+        if (region === selectedRegion) {
+          btn.style.backgroundColor = secondary;
+          btn.style.color = "#0b1020";
+          btn.style.border = "none";
+        } else {
+          btn.style.backgroundColor = "transparent";
+          btn.style.color = text;
+          btn.style.border = `1px solid ${secondary}33`;
+        }
+      });
+
+      el.selectedRegionLabel.textContent = selectedRegion || "";
+      el.currentSelectionLabel.textContent = selectedSubregion
+        ? `${selectedRegion} • ${selectedSubregion}`
+        : selectedRegion;
+    }
+
+    function updateSubregionButtons(config) {
+      const c = config || defaultConfig;
+      const secondary = c.secondary_action_color || defaultConfig.secondary_action_color;
+      const text = c.text_color || defaultConfig.text_color;
+
+      const subregions = regionToSubregions[selectedRegion] || [];
+      el.subregionContainer.innerHTML = "";
+
+      subregions.forEach(name => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = name;
+        btn.className = "px-3 py-1.5 rounded-full text-sm font-medium focus-outline";
+        btn.setAttribute("data-subregion", name);
+
+        if (!selectedSubregion) {
+          selectedSubregion = subregions[0] || "";
         }
 
-        function selectLocation(lat, lng, name) {
-            const endLocation = [lat, lng];
-            
-            // إزالة علامة البحث السابقة إن وجدت
-            if (searchMarker) {
-                map.removeLayer(searchMarker);
-            }
-            
-            // إزالة علامة التسليم السابقة
-            if (endMarker) {
-                map.removeLayer(endMarker);
-            }
-            
-            if (routeLine) {
-                map.removeLayer(routeLine);
-            }
-
-            // إضافة علامة موقع التسليم (حمراء)
-            const endIcon = L.divIcon({
-                className: 'custom-marker',
-                html: '<div style="background-color: #f56565; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-            });
-
-            endMarker = L.marker(endLocation, { icon: endIcon })
-                .addTo(map)
-                .bindPopup(`<div class="custom-popup">🎯 موقع التسليم: ${name}</div>`)
-                .openPopup();
-
-            // رسم الخط بين نقطة الانطلاق (الخضراء) والتسليم (الحمراء)
-            routeLine = L.polyline([startLocation, endLocation], {
-                color: '#667eea',
-                weight: 4,
-                opacity: 0.7,
-                dashArray: '10, 10'
-            }).addTo(map);
-
-            // حساب المسافة والسعر
-            const distance = calculateDistance(startLocation[0], startLocation[1], endLocation[0], endLocation[1]);
-            const price = calculatePrice(distance);
-
-            document.getElementById('distance-display').textContent = distance.toFixed(2) + ' كم';
-            document.getElementById('price-display').textContent = price.toLocaleString('en-US') + ' دينار';
-
-            map.setView(endLocation, 15);
-
-            const successMessage = document.createElement('div');
-            successMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #48bb78; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
-            successMessage.textContent = `✅ تم تحديد موقع التسليم: ${name}`;
-            document.body.appendChild(successMessage);
-
-            setTimeout(() => {
-                successMessage.remove();
-            }, 2500);
+        if (name === selectedSubregion) {
+          btn.style.backgroundColor = "transparent";
+          btn.style.border = `1px solid ${secondary}`;
+          btn.style.color = secondary;
+        } else {
+          btn.style.backgroundColor = "transparent";
+          btn.style.border = `1px solid ${secondary}33`;
+          btn.style.color = text;
         }
 
-        function requestLocation() {
-            if (!navigator.geolocation) {
-                const errorMessage = document.createElement('div');
-                errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f56565; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
-                errorMessage.textContent = '⚠️ متصفحك لا يدعم تحديد الموقع.';
-                document.body.appendChild(errorMessage);
-                
-                setTimeout(() => {
-                    errorMessage.remove();
-                }, 4000);
-                return;
-            }
-            
-            const locateBtn = document.getElementById('locate-btn');
-            locateBtn.disabled = true;
-            locateBtn.textContent = '⏳ جاري التحديد...';
-            
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    startLocation = [position.coords.latitude, position.coords.longitude];
-                    map.setView(startLocation, 15);
-                    
-                    if (startMarker) {
-                        map.removeLayer(startMarker);
-                    }
-                    
-                    const startIcon = L.divIcon({
-                        className: 'custom-marker',
-                        html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
-                    });
-                    
-                    startMarker = L.marker(startLocation, { icon: startIcon })
-                        .addTo(map)
-                        .bindPopup('<div class="custom-popup">📍 موقعك الحالي</div>')
-                        .openPopup();
-                    
-                    locateBtn.textContent = '✅ تم التحديد';
-                    locateBtn.style.background = '#48bb78';
-                    
-                    setTimeout(() => {
-                        locateBtn.disabled = false;
-                        locateBtn.textContent = '📍 تحديد موقعي الحالي';
-                        locateBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                    }, 2000);
-                },
-                (error) => {
-                    let errorText = '⚠️ ';
-                    
-                    if (error.code === 1) {
-                        errorText += 'يرجى السماح بالوصول للموقع من إعدادات المتصفح.';
-                    } else if (error.code === 2) {
-                        errorText += 'الموقع غير متاح حالياً.';
-                    } else if (error.code === 3) {
-                        errorText += 'انتهت مهلة الطلب. حاول مرة أخرى.';
-                    } else {
-                        errorText += 'حدث خطأ في تحديد الموقع.';
-                    }
-                    
-                    const errorMessage = document.createElement('div');
-                    errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f56565; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold; max-width: 90%; text-align: center;';
-                    errorMessage.textContent = errorText;
-                    document.body.appendChild(errorMessage);
-                    
-                    setTimeout(() => {
-                        errorMessage.remove();
-                    }, 5000);
-                    
-                    locateBtn.disabled = false;
-                    locateBtn.textContent = '📍 تحديد موقعي الحالي';
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
-                }
-            );
-        }
-
-        function initMap() {
-            // إنشاء الخريطة مع تحديد الحدود القصوى
-            const bounds = L.latLngBounds(
-                [nasiriyahBounds.south, nasiriyahBounds.west],
-                [nasiriyahBounds.north, nasiriyahBounds.east]
-            );
-            
-            map = L.map('map', {
-                center: startLocation,
-                zoom: 13,
-                maxBounds: bounds,
-                maxBoundsViscosity: 1.0,
-                minZoom: 12,
-                maxZoom: 17
-            });
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // رسم حدود مدينة الناصرية
-            L.rectangle(bounds, {
-                color: '#667eea',
-                weight: 3,
-                fillOpacity: 0.05,
-                dashArray: '5, 10'
-            }).addTo(map);
-
-            // إضافة نقطة الانطلاق الافتراضية
-            const startIcon = L.divIcon({
-                className: 'custom-marker',
-                html: '<div style="background-color: #48bb78; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-            });
-            
-            startMarker = L.marker(startLocation, { icon: startIcon })
-                .addTo(map)
-                .bindPopup('<div class="custom-popup">📍 نقطة الانطلاق الافتراضية<br><small>اضغط الزر أعلاه لتحديد موقعك</small></div>');
-
-            map.on('click', function(e) {
-                const endLocation = [e.latlng.lat, e.latlng.lng];
-                
-                // التحقق من أن الموقع داخل حدود الناصرية
-                if (endLocation[0] < nasiriyahBounds.south || endLocation[0] > nasiriyahBounds.north ||
-                    endLocation[1] < nasiriyahBounds.west || endLocation[1] > nasiriyahBounds.east) {
-                    
-                    const warningMessage = document.createElement('div');
-                    warningMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f56565; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold;';
-                    warningMessage.textContent = '⚠️ يرجى اختيار موقع داخل مدينة الناصرية فقط';
-                    document.body.appendChild(warningMessage);
-                    
-                    setTimeout(() => {
-                        warningMessage.remove();
-                    }, 3000);
-                    
-                    return;
-                }
-                
-                if (endMarker) {
-                    map.removeLayer(endMarker);
-                }
-                
-                if (routeLine) {
-                    map.removeLayer(routeLine);
-                }
-
-                const endIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<div style="background-color: #f56565; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-
-                endMarker = L.marker(endLocation, { icon: endIcon })
-                    .addTo(map)
-                    .bindPopup('<div class="custom-popup">🎯 موقع التسليم</div>')
-                    .openPopup();
-
-                routeLine = L.polyline([startLocation, endLocation], {
-                    color: '#667eea',
-                    weight: 4,
-                    opacity: 0.7,
-                    dashArray: '10, 10'
-                }).addTo(map);
-
-                const distance = calculateDistance(startLocation[0], startLocation[1], endLocation[0], endLocation[1]);
-                const price = calculatePrice(distance);
-
-                document.getElementById('distance-display').textContent = distance.toFixed(2) + ' كم';
-                document.getElementById('price-display').textContent = price.toLocaleString('en-US') + ' دينار';
-            });
-        }
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                    Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        function calculatePrice(distance) {
-            if (distance >= 1 && distance <= 1.5) {
-                return 1500;
-            } else if (distance >= 1.6 && distance <= 2.5) {
-                return 2000;
-            } else if (distance > 3) {
-                return 2500;
-            } else if (distance > 2.5 && distance <= 3) {
-                return 2000;
-            } else {
-                return 1500;
-            }
-        }
-
-        async function onConfigChange(config) {
-            document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
-            document.getElementById('instruction-text').textContent = config.instruction_text || defaultConfig.instruction_text;
-            document.getElementById('price-label').textContent = config.price_label || defaultConfig.price_label + ':';
-            document.getElementById('distance-label').textContent = config.distance_label || defaultConfig.distance_label + ':';
-
-            const primaryColor = config.primary_color || defaultConfig.primary_color;
-            const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
-            const backgroundColor = config.background_color || defaultConfig.background_color;
-            const textColor = config.text_color || defaultConfig.text_color;
-            const accentColor = config.accent_color || defaultConfig.accent_color;
-
-            document.querySelector('.header').style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
-            document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
-            document.querySelector('.info-card').style.background = `linear-gradient(135deg, ${backgroundColor} 0%, #c3cfe2 100%)`;
-            document.querySelectorAll('.info-value').forEach(el => el.style.color = primaryColor);
-            document.querySelector('.price-value').style.color = accentColor;
-            document.querySelectorAll('.info-label, .distance-range').forEach(el => el.style.color = textColor);
-            document.querySelectorAll('.price-amount').forEach(el => el.style.color = primaryColor);
-            document.querySelectorAll('.price-row').forEach(el => el.style.borderRightColor = primaryColor);
-        }
-
-        if (window.elementSdk) {
-            window.elementSdk.init({
-                defaultConfig: defaultConfig,
-                onConfigChange: onConfigChange,
-                mapToCapabilities: (config) => ({
-                    recolorables: [
-                        {
-                            get: () => config.primary_color || defaultConfig.primary_color,
-                            set: (value) => {
-                                config.primary_color = value;
-                                window.elementSdk.setConfig({ primary_color: value });
-                            }
-                        },
-                        {
-                            get: () => config.secondary_color || defaultConfig.secondary_color,
-                            set: (value) => {
-                                config.secondary_color = value;
-                                window.elementSdk.setConfig({ secondary_color: value });
-                            }
-                        },
-                        {
-                            get: () => config.background_color || defaultConfig.background_color,
-                            set: (value) => {
-                                config.background_color = value;
-                                window.elementSdk.setConfig({ background_color: value });
-                            }
-                        },
-                        {
-                            get: () => config.text_color || defaultConfig.text_color,
-                            set: (value) => {
-                                config.text_color = value;
-                                window.elementSdk.setConfig({ text_color: value });
-                            }
-                        },
-                        {
-                            get: () => config.accent_color || defaultConfig.accent_color,
-                            set: (value) => {
-                                config.accent_color = value;
-                                window.elementSdk.setConfig({ accent_color: value });
-                            }
-                        }
-                    ],
-                    borderables: [],
-                    fontEditable: undefined,
-                    fontSizeable: undefined
-                }),
-                mapToEditPanelValues: (config) => new Map([
-                    ["app_title", config.app_title || defaultConfig.app_title],
-                    ["instruction_text", config.instruction_text || defaultConfig.instruction_text],
-                    ["price_label", config.price_label || defaultConfig.price_label],
-                    ["distance_label", config.distance_label || defaultConfig.distance_label]
-                ])
-            });
-        }
-
-        window.addEventListener('load', () => {
-            initMap();
-            setupSearch();
-            if (window.elementSdk && window.elementSdk.config) {
-                onConfigChange(window.elementSdk.config);
-            }
+        btn.addEventListener("click", () => {
+          selectedSubregion = name;
+          updateSubregionButtons(config);
+          updateRegionSelectionStyles(config);
+          populateFormDefaultsFromSelection();
+          renderProjectionList();
+          clearDetailsIfDifferentSubregion();
         });
-    </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc92a96738d0f3',t:'MTc2Mjg1MTM1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+        el.subregionContainer.appendChild(btn);
+      });
+
+      // Update form selects based on selection
+      el.formRegion.value = selectedRegion || "";
+      rebuildFormSubregionOptions();
+      el.formSubregion.value = selectedSubregion || "";
+    }
+
+    function rebuildFormSubregionOptions() {
+      const subs = regionToSubregions[el.formRegion.value] || [];
+      el.formSubregion.innerHTML = `<option value="">Select subregion...</option>`;
+      subs.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        el.formSubregion.appendChild(opt);
+      });
+    }
+
+    function populateFormDefaultsFromSelection() {
+      if (!editingBackendId) {
+        el.formRegion.value = selectedRegion || "";
+        rebuildFormSubregionOptions();
+        el.formSubregion.value = selectedSubregion || "";
+      }
+    }
+
+    // When selection changes to another subregion, and details belong to previous one, clear them
+    function clearDetailsIfDifferentSubregion() {
+      if (!selectedProjectionBackendId) return;
+      const record = currentData.find(r => r.__backendId === selectedProjectionBackendId);
+      if (!record) {
+        showProjectionDetails(null);
+        return;
+      }
+      if (record.subregion !== selectedSubregion || record.region !== selectedRegion) {
+        showProjectionDetails(null);
+      }
+    }
+
+    // -----------------------
+    // PROJECTION LIST & DETAILS
+    // -----------------------
+    function renderProjectionList() {
+      const records = currentData.filter(
+        r => r.region === selectedRegion && r.subregion === selectedSubregion
+      );
+
+      // Sort by projection name
+      records.sort((a, b) => (a.projection || "").localeCompare(b.projection || ""));
+
+      el.projectionList.innerHTML = "";
+      records.forEach(record => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "text-left px-3 py-2 rounded-lg text-sm focus-outline flex flex-col gap-1 min-w-[140px]";
+        btn.setAttribute("data-backend-id", record.firebaseId);
+
+        const proj = document.createElement("div");
+        proj.className = "font-semibold";
+        proj.textContent = record.projection || "";
+        
+        const details = document.createElement("div");
+        details.className = "text-xs opacity-80 flex flex-col gap-0.5";
+        
+        if (record.anatomical_part) {
+          const part = document.createElement("span");
+          part.textContent = record.anatomical_part;
+          details.appendChild(part);
+        }
+        
+        const kvText = record.kv != null && record.kv !== "" ? `${record.kv} kV` : "";
+        const masText = record.mas != null && record.mas !== "" ? `${record.mas} mAs` : "";
+        const kvMasText = [kvText, masText].filter(Boolean).join(" • ");
+        if (kvMasText) {
+          const kvMas = document.createElement("span");
+          kvMas.textContent = kvMasText;
+          details.appendChild(kvMas);
+        }
+
+        btn.appendChild(proj);
+        if (details.children.length > 0) {
+          btn.appendChild(details);
+        }
+
+        btn.addEventListener("click", () => {
+          selectedProjectionBackendId = record.firebaseId;
+          showProjectionDetails(record);
+          highlightSelectedProjectionButton(record.firebaseId);
+        });
+
+        el.projectionList.appendChild(btn);
+      });
+
+      el.projectionCount.textContent = records.length
+        ? `${records.length} projection(s)`
+        : "No projections yet";
+
+      // If current selected projection no longer exists, clear details
+      if (selectedProjectionBackendId) {
+        const stillExists = records.some(r => r.firebaseId === selectedProjectionBackendId);
+        if (!stillExists) {
+          showProjectionDetails(null);
+        }
+      }
+      highlightSelectedProjectionButton(selectedProjectionBackendId);
+    }
+
+    function highlightSelectedProjectionButton(backendId) {
+      const btns = el.projectionList.querySelectorAll("button[data-backend-id]");
+      btns.forEach(b => {
+        if (b.getAttribute("data-backend-id") === backendId) {
+          b.classList.add("bg-slate-800");
+        } else {
+          b.classList.remove("bg-slate-800");
+        }
+      });
+    }
+
+    function showProjectionDetails(record) {
+      if (!record) {
+        el.projectionDetailsWrapper.classList.add("hidden");
+        el.noSelectionMessage.classList.remove("hidden");
+        selectedProjectionBackendId = null;
+        hideDeleteConfirmation();
+        return;
+      }
+
+      el.noSelectionMessage.classList.add("hidden");
+      el.projectionDetailsWrapper.classList.remove("hidden");
+
+      el.detailRegion.textContent = record.region || "";
+      el.detailSubregion.textContent = record.subregion || "";
+      const labelPart = record.anatomical_part ? ` (${record.anatomical_part})` : "";
+      el.detailProjection.textContent = `${record.projection || ""}${labelPart}`;
+      el.detailPatientPosition.textContent = record.patient_position || "";
+      el.detailKv.textContent = record.kv != null && record.kv !== "" ? `${record.kv}` : "-";
+      el.detailMas.textContent = record.mas != null && record.mas !== "" ? `${record.mas}` : "-";
+      el.detailNotes.textContent = record.notes || "";
+
+      // Images
+      const realUrl = record.real_image_url || "";
+      if (realUrl && realUrl.trim() !== "") {
+        el.realImage.src = realUrl;
+        el.realImage.classList.remove("hidden");
+        el.realImageFallback.classList.add("hidden");
+        // Force image to reload
+        el.realImage.style.display = "block";
+      } else {
+        el.realImage.src = "";
+        el.realImage.classList.add("hidden");
+        el.realImage.style.display = "none";
+        el.realImageFallback.classList.remove("hidden");
+      }
+
+      const xrayUrl = record.xray_image_url || "";
+      if (xrayUrl && xrayUrl.trim() !== "") {
+        el.xrayImage.src = xrayUrl;
+        el.xrayImage.classList.remove("hidden");
+        el.xrayImageFallback.classList.add("hidden");
+        // Force image to reload
+        el.xrayImage.style.display = "block";
+      } else {
+        el.xrayImage.src = "";
+        el.xrayImage.classList.add("hidden");
+        el.xrayImage.style.display = "none";
+        el.xrayImageFallback.classList.remove("hidden");
+      }
+
+      hideDeleteConfirmation();
+    }
+
+    function hideDeleteConfirmation() {
+      el.deleteConfirmation.classList.add("hidden");
+    }
+
+    function showDeleteConfirmation() {
+      el.deleteConfirmation.classList.remove("hidden");
+    }
+
+    function showEditPasswordPrompt() {
+      el.editPasswordPrompt.classList.remove("hidden");
+      el.editPasswordInput.value = "";
+      el.editPasswordError.classList.add("hidden");
+      el.editPasswordInput.focus();
+    }
+
+    function hideEditPasswordPrompt() {
+      el.editPasswordPrompt.classList.add("hidden");
+      el.editPasswordInput.value = "";
+      el.editPasswordError.classList.add("hidden");
+    }
+
+    function verifyEditPassword() {
+      const enteredPassword = el.editPasswordInput.value.trim();
+      if (enteredPassword !== MANAGER_PASSWORD) {
+        el.editPasswordError.textContent = "Incorrect password. Please try again.";
+        el.editPasswordError.classList.remove("hidden");
+        showToast("Incorrect password!", true);
+        return false;
+      }
+      return true;
+    }
+
+    function proceedWithEdit() {
+      if (!verifyEditPassword()) return;
+      
+      hideEditPasswordPrompt();
+      
+      // Unlock the form
+      el.passwordUnlockScreen.classList.add("hidden");
+      el.formContentWrapper.classList.remove("hidden");
+      
+      // Load the record into the form
+      const rec = currentData.find(r => r.firebaseId === selectedProjectionBackendId);
+      if (rec) {
+        fillFormFromRecord(rec);
+        showToast("Form unlocked. You can now edit and save.");
+      }
+    }
+
+    // -----------------------
+    // FORM HANDLING
+    // -----------------------
+    function resetForm(newMode = true) {
+      el.form.reset();
+      editingBackendId = null;
+      el.formModeLabel.textContent = "New";
+      setFormStatus("");
+      hideDeleteConfirmation();
+      populateFormDefaultsFromSelection();
+    }
+
+    function fillFormFromRecord(record) {
+      if (!record) return;
+      editingBackendId = record.firebaseId;
+      el.formModeLabel.textContent = "Editing";
+      el.formRegion.value = record.region || "";
+      rebuildFormSubregionOptions();
+      el.formSubregion.value = record.subregion || "";
+      el.formAnatomicalPart.value = record.anatomical_part || "";
+      el.formProjection.value = record.projection || "";
+      el.formPatientPosition.value = record.patient_position || "";
+      el.formKv.value = record.kv != null && record.kv !== "" ? record.kv : "";
+      el.formMas.value = record.mas != null && record.mas !== "" ? record.mas : "";
+      el.formNotes.value = record.notes || "";
+      el.formRealImageUrl.value = record.real_image_url || "";
+      el.formXrayImageUrl.value = record.xray_image_url || "";
+      setFormStatus("");
+      hideDeleteConfirmation();
+    }
+
+    function getFormData() {
+      const region = el.formRegion.value.trim();
+      const subregion = el.formSubregion.value.trim();
+      const anatomicalPart = el.formAnatomicalPart.value.trim();
+      const projection = el.formProjection.value.trim();
+      const patientPosition = el.formPatientPosition.value.trim();
+      const kvRaw = el.formKv.value.trim();
+      const masRaw = el.formMas.value.trim();
+      const notes = el.formNotes.value.trim();
+      const realUrl = el.formRealImageUrl.value.trim();
+      const xrayUrl = el.formXrayImageUrl.value.trim();
+
+      let kv = kvRaw === "" ? "" : Number(kvRaw);
+      let mas = masRaw === "" ? "" : Number(masRaw);
+
+      if (kvRaw !== "" && Number.isNaN(kv)) kv = "";
+      if (masRaw !== "" && Number.isNaN(mas)) mas = "";
+
+      return {
+        region,
+        subregion,
+        anatomical_part: anatomicalPart,
+        projection,
+        patient_position: patientPosition,
+        kv,
+        mas,
+        notes,
+        real_image_url: realUrl,
+        xray_image_url: xrayUrl
+      };
+    }
+
+    function validateFormData(data) {
+      if (!data.region) return "Please select a region.";
+      if (!data.subregion) return "Please select a subregion.";
+      if (!data.projection) return "Please enter the projection name (e.g. AP, Lateral).";
+      return null;
+    }
+
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      if (!window.firebaseDB) {
+        setFormStatus("Firebase is not ready yet.", true);
+        return;
+      }
+
+      const data = getFormData();
+      const error = validateFormData(data);
+      if (error) {
+        setFormStatus(error, true);
+        showToast(error, true);
+        return;
+      }
+
+      // Add timestamp
+      data.created_at = new Date().toISOString();
+
+      el.saveBtn.disabled = true;
+      el.saveBtn.textContent = "Saving...";
+      setFormStatus("");
+
+      try {
+        const { database, ref, push, update } = window.firebaseDB;
+        const projectionsRef = ref(database, 'projections');
+
+        if (editingBackendId) {
+          // Update existing record
+          const recordRef = ref(database, `projections/${editingBackendId}`);
+          await update(recordRef, data);
+          setFormStatus("Updated successfully.");
+          showToast("Projection updated.");
+        } else {
+          // Create new record
+          await push(projectionsRef, data);
+          setFormStatus("Saved successfully.");
+          showToast("Projection saved.");
+          resetForm();
+        }
+      } catch (e) {
+        setFormStatus("Error while saving: " + e.message, true);
+        showToast("Error while saving.", true);
+      } finally {
+        el.saveBtn.disabled = false;
+        const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+        el.saveBtn.textContent = (config && config.save_button_text) || defaultConfig.save_button_text;
+      }
+    }
+
+    // -----------------------
+    // DELETE HANDLING
+    // -----------------------
+    async function deleteCurrentRecord() {
+      if (!selectedProjectionBackendId || !window.firebaseDB) return;
+
+      const record = currentData.find(r => r.firebaseId === selectedProjectionBackendId);
+      if (!record) {
+        showToast("Record already deleted.", true);
+        hideDeleteConfirmation();
+        return;
+      }
+
+      el.confirmDeleteBtn.disabled = true;
+      el.confirmDeleteBtn.textContent = "Deleting...";
+
+      try {
+        const { database, ref, remove } = window.firebaseDB;
+        const recordRef = ref(database, `projections/${record.firebaseId}`);
+        await remove(recordRef);
+        showToast("Projection deleted.");
+        if (editingBackendId === record.firebaseId) {
+          resetForm();
+        }
+        showProjectionDetails(null);
+      } catch (e) {
+        showToast("Error while deleting: " + e.message, true);
+      } finally {
+        el.confirmDeleteBtn.disabled = false;
+        el.confirmDeleteBtn.textContent = "Yes, delete";
+        hideDeleteConfirmation();
+      }
+    }
+
+    // -----------------------
+    // FIREBASE LISTENER
+    // -----------------------
+    function initFirebaseListener() {
+      if (!window.firebaseDB) {
+        console.error("Firebase not ready");
+        return;
+      }
+
+      const { database, ref, onValue } = window.firebaseDB;
+      const projectionsRef = ref(database, 'projections');
+
+      onValue(projectionsRef, (snapshot) => {
+        const data = snapshot.val();
+        currentData = [];
+
+        if (data) {
+          // Convert Firebase object to array with firebaseId
+          Object.keys(data).forEach(key => {
+            currentData.push({
+              firebaseId: key,
+              ...data[key]
+            });
+          });
+        }
+
+        currentRecordCount = currentData.length;
+
+        // Update record count label
+        el.recordCountLabel.textContent = currentRecordCount
+          ? `${currentRecordCount} projection(s) stored`
+          : "No projections stored yet";
+
+        // Re-render list for current selection
+        renderProjectionList();
+
+        // If current selected projection still exists, refresh details
+        if (selectedProjectionBackendId) {
+          const rec = currentData.find(r => r.firebaseId === selectedProjectionBackendId);
+          if (rec) {
+            showProjectionDetails(rec);
+          } else {
+            showProjectionDetails(null);
+          }
+        }
+      }, (error) => {
+        showToast("Firebase connection error: " + error.message, true);
+      });
+    }
+
+    // -----------------------
+    // ELEMENT SDK INIT
+    // -----------------------
+    function mapToCapabilities(config) {
+      const c = config || defaultConfig;
+      return {
+        recolorables: [
+          {
+            get: () => c.background_color || defaultConfig.background_color,
+            set: (value) => {
+              if (!window.elementSdk) return;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => c.surface_color || defaultConfig.surface_color,
+            set: (value) => {
+              if (!window.elementSdk) return;
+              window.elementSdk.setConfig({ surface_color: value });
+            }
+          },
+          {
+            get: () => c.text_color || defaultConfig.text_color,
+            set: (value) => {
+              if (!window.elementSdk) return;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => c.primary_action_color || defaultConfig.primary_action_color,
+            set: (value) => {
+              if (!window.elementSdk) return;
+              window.elementSdk.setConfig({ primary_action_color: value });
+            }
+          },
+          {
+            get: () => c.secondary_action_color || defaultConfig.secondary_action_color,
+            set: (value) => {
+              if (!window.elementSdk) return;
+              window.elementSdk.setConfig({ secondary_action_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => c.font_family || defaultConfig.font_family,
+          set: (value) => {
+            if (!window.elementSdk) return;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => Number(c.font_size || defaultConfig.font_size),
+          set: (value) => {
+            if (!window.elementSdk) return;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      const c = config || defaultConfig;
+      return new Map([
+        ["app_title", c.app_title || defaultConfig.app_title],
+        ["app_subtitle", c.app_subtitle || defaultConfig.app_subtitle],
+        ["region_panel_title", c.region_panel_title || defaultConfig.region_panel_title],
+        ["details_panel_title", c.details_panel_title || defaultConfig.details_panel_title],
+        ["form_panel_title", c.form_panel_title || defaultConfig.form_panel_title],
+        ["save_button_text", c.save_button_text || defaultConfig.save_button_text],
+        ["reset_button_text", c.reset_button_text || defaultConfig.reset_button_text]
+      ]);
+    }
+
+    async function onConfigChange(config) {
+      cacheDom();
+      await applyTextFromConfig(config);
+      applyTheme(config);
+      updateRegionSelectionStyles(config);
+      updateSubregionButtons(config);
+      renderProjectionList();
+    }
+
+    function initElementSdk() {
+      if (!window.elementSdk) {
+        // Fallback: apply defaults without SDK
+        cacheDom();
+        applyTextFromConfig(defaultConfig);
+        applyTheme(defaultConfig);
+        updateSubregionButtons(defaultConfig);
+        renderProjectionList();
+        return;
+      }
+
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    // -----------------------
+    // FORM LOCK/UNLOCK
+    // -----------------------
+    function unlockForm() {
+      const enteredPassword = el.unlockPassword.value.trim();
+      if (enteredPassword !== MANAGER_PASSWORD) {
+        el.unlockError.textContent = "Incorrect password. Please try again.";
+        el.unlockError.classList.remove("hidden");
+        showToast("Incorrect password!", true);
+        return;
+      }
+
+      // Password correct - show form
+      el.passwordUnlockScreen.classList.add("hidden");
+      el.formContentWrapper.classList.remove("hidden");
+      el.unlockPassword.value = "";
+      el.unlockError.classList.add("hidden");
+      showToast("Form unlocked successfully.");
+    }
+
+    function lockForm() {
+      el.passwordUnlockScreen.classList.remove("hidden");
+      el.formContentWrapper.classList.add("hidden");
+      resetForm();
+      showToast("Form locked.");
+    }
+
+    // -----------------------
+    // EVENT LISTENERS
+    // -----------------------
+    function attachEventListeners() {
+      // Regions
+      document.querySelectorAll(".region-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedRegion = btn.getAttribute("data-region");
+          selectedSubregion = (regionToSubregions[selectedRegion] || [])[0] || "";
+          const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+          updateRegionSelectionStyles(config);
+          updateSubregionButtons(config);
+          populateFormDefaultsFromSelection();
+          renderProjectionList();
+          clearDetailsIfDifferentSubregion();
+        });
+      });
+
+      // Form region change -> rebuild subregion select
+      el.formRegion.addEventListener("change", () => {
+        rebuildFormSubregionOptions();
+        el.formSubregion.value = "";
+      });
+
+      el.form.addEventListener("submit", handleFormSubmit);
+      el.resetBtn.addEventListener("click", () => resetForm());
+
+      el.editCurrentBtn.addEventListener("click", () => {
+        if (!selectedProjectionBackendId) return;
+        
+        // Check if form is locked
+        if (!el.formContentWrapper.classList.contains("hidden")) {
+          // Form is already unlocked, proceed with edit
+          const rec = currentData.find(r => r.firebaseId === selectedProjectionBackendId);
+          if (rec) {
+            fillFormFromRecord(rec);
+            showToast("Loaded into form. You can edit and save.");
+          }
+        } else {
+          // Form is locked, show inline password prompt
+          showEditPasswordPrompt();
+        }
+      });
+
+      el.deleteCurrentBtn.addEventListener("click", () => {
+        if (!selectedProjectionBackendId) return;
+        showDeleteConfirmation();
+      });
+
+      el.confirmDeleteBtn.addEventListener("click", () => {
+        deleteCurrentRecord();
+      });
+
+      el.cancelDeleteBtn.addEventListener("click", () => {
+        hideDeleteConfirmation();
+      });
+
+      // Edit password prompt
+      el.confirmEditPasswordBtn.addEventListener("click", proceedWithEdit);
+      el.cancelEditPasswordBtn.addEventListener("click", hideEditPasswordPrompt);
+      el.editPasswordInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          proceedWithEdit();
+        }
+      });
+
+      // Unlock/Lock form
+      el.unlockBtn.addEventListener("click", unlockForm);
+      el.unlockPassword.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          unlockForm();
+        }
+      });
+      el.lockFormBtn.addEventListener("click", lockForm);
+    }
+
+    // -----------------------
+    // INIT
+    // -----------------------
+    (function init() {
+      cacheDom();
+      attachEventListeners();
+      initElementSdk();
+      
+      // Wait for Firebase to be ready
+      if (window.firebaseDB) {
+        initFirebaseListener();
+      } else {
+        window.addEventListener('firebaseReady', () => {
+          initFirebaseListener();
+        });
+      }
+      
+      // Ensure some initial selection for better UX
+      selectedRegion = "Spine";
+      selectedSubregion = "Lumbar spine";
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      updateRegionSelectionStyles(config);
+      updateSubregionButtons(config);
+      renderProjectionList();
+    })();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a86ed3b82788ef3',t:'MTc2NDgwNTQxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
